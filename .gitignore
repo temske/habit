@@ -30,3 +30,6 @@ apps/web/.impeccable/review/
 
 # Local screenshots and scratch pages of design work, not source.
 .shots/
+
+# Exports from other apps for the import scripts (docs/import.md). Personal data: never committed.
+imports/
