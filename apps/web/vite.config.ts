@@ -3,12 +3,14 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite-plus";
 
+import { serviceWorker } from "./build/service-worker";
+
 /**
  * Opens the connection to Clerk's Frontend API while the app's own JS loads. The start waits for
- * Clerk (its script and the check of the session both come from that host), so the handshake is
- * done by the time Clerk asks. The host is in the publishable key: `pk_test_` or `pk_live_`, then
- * the host and a `$` in base64. Two links: the script loads without credentials, the session check
- * with them, and the browser keeps those connections apart.
+ * Clerk's check of the session, which comes from that host, so the handshake is done by the time
+ * Clerk asks. The host is in the publishable key: `pk_test_` or `pk_live_`, then the host and a `$`
+ * in base64. Two links: Clerk's UI script loads without credentials, the session check with them,
+ * and the browser keeps those connections apart. (Clerk's main script ships in the app's bundle.)
  */
 function clerkPreconnect(): Plugin {
   let host: string | undefined;
@@ -42,6 +44,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     clerkPreconnect(),
+    serviceWorker(),
   ],
   resolve: {
     tsconfigPaths: true,
@@ -54,11 +57,16 @@ export default defineConfig({
       // The end-to-end check on the real backend (e2e/real-backend.ts). It needs the network and
       // the Convex CLI's login, so `vp run ready` does not run it, and it is never cached.
       e2e: { command: "node e2e/real-backend.ts", cache: false },
+      // The check of the installable app on a production build (e2e/pwa.ts). It needs Google
+      // Chrome and a free port, so it is not part of `vp run ready`.
+      pwa: { command: "node e2e/pwa.ts", cache: false },
+      // Draws the app icon into public/ (scripts/icons.ts). It needs Google Chrome.
+      icons: { command: "node scripts/icons.ts", cache: false },
     },
   },
   test: {
     name: "web",
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["{src,sw,build}/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
   },

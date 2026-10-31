@@ -62,6 +62,17 @@ const lazyIcons = new Map<string, LazyExoticComponent<Icon>>();
 /** The icons that have rendered once, so they render at once from now on. */
 const loadedIcons = new Set<string>();
 
+/** The icons whose chunk failed to load, to load again when the network is back. */
+const failedIcons = new Set<string>();
+if (typeof window !== "undefined") {
+  window.addEventListener("online", () => {
+    for (const key of failedIcons) lazyIcons.delete(key);
+    failedIcons.clear();
+  });
+}
+
+const NoIcon = (() => null) as unknown as Icon;
+
 function iconKey(name: string): string {
   return name in PHOSPHOR_ICON_LOADERS ? name : "circle";
 }
@@ -72,10 +83,18 @@ function phosphorIcon(name: string): LazyExoticComponent<Icon> {
   if (component === undefined) {
     const load = PHOSPHOR_ICON_LOADERS[key]!;
     component = lazy(() =>
-      load().then((Loaded) => {
-        loadedIcons.add(key);
-        return { default: Loaded };
-      }),
+      load().then(
+        (Loaded) => {
+          loadedIcons.add(key);
+          return { default: Loaded };
+        },
+        () => {
+          // Offline, an icon that this device never loaded is not in the service worker's cache.
+          // The box stays empty, and the icon loads again on a render after the network is back.
+          failedIcons.add(key);
+          return { default: NoIcon };
+        },
+      ),
     );
     lazyIcons.set(key, component);
   }
@@ -85,6 +104,6 @@ function phosphorIcon(name: string): LazyExoticComponent<Icon> {
 /** Starts loading the icons of these habits, so the list paints them without a gap. */
 export function preloadHabitIcons(icons: readonly HabitIconValue[]): void {
   for (const icon of icons) {
-    if (icon.type === "phosphor") void PHOSPHOR_ICON_LOADERS[icon.name]?.();
+    if (icon.type === "phosphor") PHOSPHOR_ICON_LOADERS[icon.name]?.().catch(() => {});
   }
 }

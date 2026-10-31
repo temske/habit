@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 
 import { installCssSprings } from "@/components/motion";
 import { createAppRouter } from "@/router";
+import { registerServiceWorker } from "@/service-worker";
 
 import "@/styles.css";
 
@@ -51,12 +52,17 @@ installCssSprings();
 // After a deploy, a tab that was open before it asks for chunks that no longer exist: load the
 // new version instead of showing the router's error. At most once a minute, so a chunk that stays
 // missing cannot reload the page in a loop.
+// Offline there is no new version to load: the chunk is missing from the worker's cache.
 window.addEventListener("vite:preloadError", () => {
+  if (!navigator.onLine) return;
   const last = Number(sessionStorage.getItem("habit:reloaded-at") ?? 0);
   if (Date.now() - last < 60_000) return;
   sessionStorage.setItem("habit:reloaded-at", String(Date.now()));
   window.location.reload();
 });
+
+// The installed app's offline shell (sw/worker.ts). The dev server has no worker.
+if (import.meta.env.PROD) registerServiceWorker();
 
 // Dev only: the panel that switches the lab's variants (components/lab).
 const LabPanel = import.meta.env.DEV ? lazy(() => import("@/components/lab/panel")) : null;

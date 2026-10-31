@@ -13,6 +13,7 @@
     "convex:push": "convex dev --once"
   },
   "dependencies": {
+    "@clerk/clerk-js": "catalog:",
     "@clerk/react": "catalog:",
     "@habit/core": "workspace:*",
     "convex": "catalog:",

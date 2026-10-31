@@ -262,6 +262,9 @@
 
   body {
     min-height: 100dvh;
+    /* A phone on its side puts the notch at the left or the right: the content stays clear of it.
+       The top and the bottom insets are on the screens' own headers, sheets and bars. */
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
     background: var(--ground);
     color: var(--ink);
   }
@@ -475,14 +478,17 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    padding: 0 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    padding: 0 calc(0.5rem + env(safe-area-inset-right, 0px))
+      calc(0.5rem + env(safe-area-inset-bottom, 0px)) calc(0.5rem + env(safe-area-inset-left, 0px));
   }
 
   .sheet-popup {
     position: relative;
     width: 100%;
     max-width: 30rem;
-    max-height: calc(100dvh - 3rem - env(safe-area-inset-top, 0px));
+    max-height: calc(
+      100dvh - 3rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    );
     overflow-y: auto;
     overscroll-behavior: contain;
     background: var(--surface);
