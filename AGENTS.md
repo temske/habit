@@ -113,7 +113,7 @@ A Vite+ workspace on pnpm.
 
 # Pull requests
 
-Every feature goes to `main` through a pull request on GitHub (`moetazaneta/habit`), never by a
+Every feature goes to `main` through a pull request on GitHub (`temske/habit`), never by a
 direct push. A ruleset on `main` enforces this: it takes no direct pushes and no force pushes,
 merges only by squash, and needs two checks to pass: `Check, test and build` (`ci.yml`, the
 `ready` task) and `PR title` (`pr-title.yml`, the commit format below).
@@ -126,7 +126,7 @@ merges only by squash, and needs two checks to pass: `Check, test and build` (`c
    (`VITE_HABIT_DATA=fake`), on a phone viewport at 2x or 3x, in the light and the dark theme.
    GitHub's API cannot upload images, so commit them to `.github/pr-assets/<branch>/` in one
    commit, remove them in the next, and link them by the first commit's SHA:
-   `https://raw.githubusercontent.com/moetazaneta/habit/<sha>/.github/pr-assets/<branch>/<file>.png`.
+   `https://raw.githubusercontent.com/temske/habit/<sha>/.github/pr-assets/<branch>/<file>.png`.
    The squash keeps them off `main`, and the PR's history keeps the links working.
 3. **Wait for CI.** Merge only after both checks pass: `gh pr checks <n> --watch`. A red or
    pending check means no merge; GitHub refuses it anyway.
@@ -143,7 +143,7 @@ the colon marks a breaking change.
   PR with a single commit GitHub uses that commit's message instead:
 
   ```sh
-  n=<PR>; gh pr merge $n --repo moetazaneta/habit --squash --subject "$(gh pr view $n --repo moetazaneta/habit --json title -q .title) (#$n)"
+  n=<PR>; gh pr merge $n --repo temske/habit --squash --subject "$(gh pr view $n --repo temske/habit --json title -q .title) (#$n)"
   ```
 
 - **Types:** `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `revert`,
