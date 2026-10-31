@@ -135,9 +135,9 @@ development instance has the email code on already.
   update to a new build in an open tab (new cache in, old cache out, reload shows the list).
 - On the dev backend (production build, owner test user): no response of Convex or Clerk came from
   the worker, the caches hold no other origin, the offline start shows the snapshot (above).
-- `vp -C apps/web run e2e`: the email-code sign-in passes. The run then stops at the creation of
-  the first habit, as it does on `main` at 11bba7e: the create form changed in #12, and the check
-  was not updated.
+- `vp -C apps/web run e2e`: the email-code sign-in passes. The run then stopped at the creation of
+  the first habit: the create form changed in #12, and the check was not updated. The check
+  follows the new form since then, and passes.
 - The safe areas: Chrome cannot set `env(safe-area-inset-*)`, so the screenshots of the PR
   replace each one in the served CSS and JS with an iPhone 15 Pro's values (59px top, 34px
   bottom) and look at every screen and sheet.

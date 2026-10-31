@@ -58,8 +58,14 @@ vp -C apps/web run e2e
 ```
 
 - It deletes the data of the owner test user, starts its own dev server on port 5433 with
-  `VITE_HABIT_DATA=convex`, and stops that server at the end. It prints each step and each
-  failure. Screenshots and the server's `dev.log` go to `$TMPDIR/habit-e2e` (or `$E2E_SHOTS`).
+  `VITE_HABIT_DATA=convex`, and stops that server at the end. Then it deletes the owner test
+  user's data again, so the deployment keeps no test data. It prints each step and each failure.
+  Screenshots and the server's `dev.log` go to `$TMPDIR/habit-e2e` (or `$E2E_SHOTS`).
+- The reset deletes by the owner test user's id only (`admin:deleteUserData`), on the deployment
+  of `VITE_CONVEX_URL` in `apps/web`'s Vite env, so it needs no `packages/data/.env.local`. The
+  owner's real habits on that deployment are not touched.
+- It hides the lab panel of the dev server (`docs/lab.md`): the panel covered the sheets'
+  buttons, and the run keeps each lab control on its first option.
 - It needs the network, Google Chrome, and the login of the Convex CLI (for the reset). So it is an
   uncached task of its own, not a part of `vp run ready`, and CI does not run it.
 - If port 5433 is in use, it stops with a message. Options: `E2E_URL` (use a dev server that runs
