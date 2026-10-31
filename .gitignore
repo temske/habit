@@ -15,6 +15,9 @@ dist
 # The web app's dev defaults (the data mode), with no secrets.
 !apps/web/.env.development
 
+# The Vercel CLI's link to the project (docs/deploy.md).
+.vercel/
+
 # AI agent worktrees.
 .claude/worktrees/
 

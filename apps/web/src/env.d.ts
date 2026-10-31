@@ -5,4 +5,6 @@ interface ImportMetaEnv {
   readonly VITE_HABIT_FAKE_LATENCY_MS?: string;
   /** Fake mode only: "true" makes every write fail, to see the "Couldn't save" toast. */
   readonly VITE_HABIT_FAKE_FAIL?: string;
+  /** The Clerk instance. A development key (`pk_test_`) also turns on the email code. */
+  readonly VITE_CLERK_PUBLISHABLE_KEY?: string;
 }
