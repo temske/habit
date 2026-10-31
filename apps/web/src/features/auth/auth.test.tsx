@@ -1,9 +1,13 @@
 import { FAKE_EMAIL_CODE, FAKE_STRANGER_ID } from "@habit/data/testing";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { expect, test } from "vite-plus/test";
+import { afterEach, expect, test, vi } from "vite-plus/test";
 
 import { deploymentName, ownerCommand } from "@/features/auth/owner-command";
 import { renderApp } from "@/test/render-app";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 test("while the sign-in loads, neither the list nor the sign-in shows", async () => {
   renderApp("/", { auth: "loading" });
@@ -39,6 +43,35 @@ test("in development, an email code signs in, and a wrong code says so", async (
   fireEvent.change(code, { target: { value: FAKE_EMAIL_CODE } });
   fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
   expect(await screen.findByRole("heading", { name: "Habits" })).toBeTruthy();
+});
+
+test("in a production build on the production instance, a browser tab offers Google alone", async () => {
+  vi.stubEnv("DEV", false);
+  vi.stubEnv("VITE_CLERK_PUBLISHABLE_KEY", "pk_live_Y2xlcmsuaGFiaXQudGVtLnNoJA");
+  renderApp("/", { auth: "signedOut" });
+
+  await screen.findByRole("button", { name: "Continue with Google" });
+  expect(screen.queryByRole("button", { name: "Sign in with an email code" })).toBeNull();
+});
+
+test("in a production build on the production instance, the installed app also offers the email code, without the test users", async () => {
+  vi.stubEnv("DEV", false);
+  vi.stubEnv("VITE_CLERK_PUBLISHABLE_KEY", "pk_live_Y2xlcmsuaGFiaXQudGVtLnNoJA");
+  const matchMedia = window.matchMedia;
+  window.matchMedia = (query: string) => {
+    const list = matchMedia(query);
+    Object.defineProperty(list, "matches", { value: query === "(display-mode: standalone)" });
+    return list;
+  };
+  try {
+    renderApp("/", { auth: "signedOut" });
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sign in with an email code" }));
+    expect(screen.getByLabelText("Email")).toBeTruthy();
+    expect(screen.queryByText(/Development only/)).toBeNull();
+  } finally {
+    window.matchMedia = matchMedia;
+  }
 });
 
 test("without access, the screen shows the user id and the command, and signs out", async () => {

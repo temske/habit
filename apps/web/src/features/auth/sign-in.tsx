@@ -3,6 +3,7 @@ import { GoogleLogoIcon } from "@phosphor-icons/react/dist/csr/GoogleLogo";
 import { useEffect, useId, useState, type FormEvent } from "react";
 
 import { MorphHeight } from "@/components/sheet";
+import { useMediaQuery } from "@/components/use-media-query";
 import { AuthButton, AuthScreen } from "@/features/auth/auth-screen";
 
 /** The test users of the Clerk development instance (docs/notes/data.md). */
@@ -12,17 +13,23 @@ const TEST_USERS = {
 } as const;
 
 /**
- * The email code is for the Clerk development instance, whose test users take the code 424242:
- * in the dev server, and in a build on that instance, such as the deployment at habit.tem.sh
- * (docs/deploy.md). A build on a production instance offers Google only.
+ * The email code with the note about the test users is for the Clerk development instance, whose
+ * test users take the code 424242: in the dev server, and in a build on that instance, such as the
+ * deployment at habit.tem.sh (docs/deploy.md).
  */
-const offerEmailCode =
-  import.meta.env.DEV ||
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.startsWith("pk_test_") === true;
+function onDevInstance(): boolean {
+  return (
+    import.meta.env.DEV ||
+    import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.startsWith("pk_test_") === true
+  );
+}
 
 /**
- * Signed out: the mark, the name, and one action, "Continue with Google". On the Clerk development
- * instance a sign-in with an email code is one tap further, so the test users can sign in.
+ * Signed out: the mark, the name, and one action, "Continue with Google". A sign-in with an email
+ * code is one tap further on the development instance, so the test users can sign in, and in the
+ * installed app on any instance: on iOS, Google's page opens in a Safari sheet that does not share
+ * its cookies with the installed app, so the sign-in there does not reach the app
+ * (docs/notes/pwa.md).
  */
 export function SignInScreen({
   signIn,
@@ -32,6 +39,8 @@ export function SignInScreen({
   emailCode?: EmailCodeSignIn | undefined;
 }) {
   const [opening, setOpening] = useState(false);
+  const installed = useInstalled();
+  const devInstance = onDevInstance();
 
   // Back from Google's page, the browser can restore this page as it was left: the button must
   // work again.
@@ -57,18 +66,34 @@ export function SignInScreen({
           <GoogleLogoIcon weight="bold" className="size-4.5" aria-hidden />
           {opening ? "Opening Google…" : "Continue with Google"}
         </AuthButton>
-        {offerEmailCode && emailCode !== undefined ? (
-          <EmailCodeSection emailCode={emailCode} />
+        {(devInstance || installed) && emailCode !== undefined ? (
+          <EmailCodeSection emailCode={emailCode} testUsers={devInstance} />
         ) : null}
       </div>
     </AuthScreen>
   );
 }
 
+/** The app runs installed, from the Home Screen, without the browser's bars. */
+function useInstalled(): boolean {
+  const standalone = useMediaQuery("(display-mode: standalone)");
+  // iOS before 16.4 reports a Home Screen app only through `navigator.standalone`.
+  return standalone || (navigator as { standalone?: boolean }).standalone === true;
+}
+
 type Step = { name: "closed" } | { name: "email" } | { name: "code"; email: string };
 
-/** The development instance only: a sign-in with a code from an email, in two short steps. */
-function EmailCodeSection({ emailCode }: { emailCode: EmailCodeSignIn }) {
+/**
+ * A sign-in with a code from an email, in two short steps. `testUsers`: a note that names the test
+ * users of the development instance.
+ */
+function EmailCodeSection({
+  emailCode,
+  testUsers,
+}: {
+  emailCode: EmailCodeSignIn;
+  testUsers: boolean;
+}) {
   const [step, setStep] = useState<Step>({ name: "closed" });
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -139,7 +164,7 @@ function EmailCodeSection({ emailCode }: { emailCode: EmailCodeSignIn }) {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             aria-invalid={error !== null}
-            aria-describedby={error === null ? `${ids}-note` : errorId}
+            aria-describedby={error === null ? (testUsers ? `${ids}-note` : undefined) : errorId}
             // The person opened this form a moment ago.
             autoFocus
           />
@@ -147,12 +172,14 @@ function EmailCodeSection({ emailCode }: { emailCode: EmailCodeSignIn }) {
           <AuthButton variant="quiet" type="submit" disabled={busy || email.trim() === ""}>
             {busy ? "Sending…" : "Send code"}
           </AuthButton>
-          <p id={`${ids}-note`} className="auth-note">
-            Development only. The test users{" "}
-            <TestUser label="owner" onPick={() => setEmail(TEST_USERS.owner)} /> and{" "}
-            <TestUser label="guest" onPick={() => setEmail(TEST_USERS.guest)} /> get the code
-            424242.
-          </p>
+          {testUsers ? (
+            <p id={`${ids}-note`} className="auth-note">
+              Development only. The test users{" "}
+              <TestUser label="owner" onPick={() => setEmail(TEST_USERS.owner)} /> and{" "}
+              <TestUser label="guest" onPick={() => setEmail(TEST_USERS.guest)} /> get the code
+              424242.
+            </p>
+          ) : null}
         </form>
       ) : (
         <form className="flex flex-col gap-3 pt-5" onSubmit={verifyCode} noValidate>

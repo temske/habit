@@ -1,3 +1,4 @@
+import { Clerk } from "@clerk/clerk-js";
 import { ClerkProvider, HandleSSOCallback, useAuth, useClerk, useSignIn } from "@clerk/react";
 import type { Day, Month } from "@habit/core";
 import { liveWindow, monthOf, today } from "@habit/core";
@@ -25,6 +26,24 @@ export const SSO_CALLBACK_PATH = "/sso-callback";
 
 /** The live window covers the 12-month grid plus the current Month (docs/v1.md, "Data"). */
 const LIVE_MONTHS = 13;
+
+const clerks = new Map<string, Clerk>();
+
+/**
+ * Clerk's script, in the app's bundle instead of from Clerk's CDN. The service worker caches it
+ * with the app, so the app starts offline (Clerk then reports the last session in its "degraded"
+ * state) and starts faster online (docs/notes/pwa.md). One instance for each key, also when React
+ * mounts the provider two times: with two, the session of a sign-in goes to the other one.
+ * `@clerk/clerk-js` and `@clerk/react` must resolve one version of `@clerk/shared`.
+ */
+function clerkInstance(publishableKey: string): Clerk {
+  let clerk = clerks.get(publishableKey);
+  if (clerk === undefined) {
+    clerk = new Clerk(publishableKey);
+    clerks.set(publishableKey, clerk);
+  }
+  return clerk;
+}
 
 const clients = new Map<string, ConvexReactClient>();
 
@@ -57,7 +76,11 @@ export function HabitDataProvider(props: {
   const [snapshots] = useState(indexedDbSnapshotStore);
 
   return (
-    <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/">
+    <ClerkProvider
+      Clerk={clerkInstance(publishableKey)}
+      publishableKey={publishableKey}
+      afterSignOutUrl="/"
+    >
       <ConvexProviderWithClerk client={convexClient(convexUrl)} useAuth={useAuth}>
         {globalThis.location?.pathname === SSO_CALLBACK_PATH ? (
           <SsoCallback />

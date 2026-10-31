@@ -350,7 +350,7 @@ The phone layout is the layout. A desktop gets the same layout with more room.
 - **The bottom** of a scrolling page has 6rem plus the safe-area inset of padding, so the toast never covers the last row.
 - **Rhythm.** 0.75rem is the common gap: icon to name, between controls in a sheet, inside an option. 0.5rem is the tight gap: between the buttons in a row, and the inset of a floating sheet. 1.25rem is the side padding of a sheet, the same as the gutter.
 - **Touch targets** are about 44px (`touch`, 2.75rem), also where the visible mark is smaller. The close button is a 44px target around a 28px disc. A Day cell is a square plus a gap wide and a full row tall.
-- **Safe areas.** The page uses `viewport-fit=cover`. The day header, the bottom sheet, the toast and the bottom padding add `env(safe-area-inset-*)`.
+- **Safe areas.** The page uses `viewport-fit=cover`. The day header, the bottom sheet, the toast and the bottom padding add `env(safe-area-inset-*)`. A bottom sheet is at most the screen less 3rem and both insets. The body pads the left and right insets, so a phone on its side keeps the content clear of the notch.
 - **Units.** Measures are in rem, so the desktop base scales them. The list's measures are custom properties (`--gutter`, `--row`, `--icon`, `--square`, `--square-gap`).
 
 ## Elevation & Depth
@@ -542,8 +542,14 @@ The screens of `features/auth/`. `AuthGate` in the root route shows the app to t
 - **The mark:** five `DaySquare`s of 2.125rem in a row, with the gauge gap, in sky, green, ochre, violet and rose. It is the only color on these screens.
 - **Loading:** the bare ground, so a fast start goes straight to its screen. After 1s the empty mark fades in (400ms, `--ease-out`) at the place where the sign-in screen draws it.
 - **Sign-in:** centered. The mark fills one square after the other (70ms apart) with the gauge's spring and pulse, then the title "Habit" and one primary button, "Continue with Google" (a bold Phosphor Google logo, 0.375rem before the label). While Google opens, the label says "Opening Google…". No other copy.
-- **Email code (development only):** "Sign in with an email code", a quiet text action in `ink-3` with a 44px target, opens two short steps under the button, with the morph spring: the email field and "Send code", then the code field (tabular, centered, letter-spaced 0.2em) and "Sign in". Fields on the ground use `surface-2` in the light theme and `surface` in the dark theme. A note in `ink-3` names the test users; "owner" and "guest" in it are underlined words that fill the field. A message under a field is 0.875rem in `ink-2`.
+- **Email code (development, and the installed app):** "Sign in with an email code", a quiet text action in `ink-3` with a 44px target, opens two short steps under the button, with the morph spring: the email field and "Send code", then the code field (tabular, centered, letter-spaced 0.2em) and "Sign in". Fields on the ground use `surface-2` in the light theme and `surface` in the dark theme. In development, a note in `ink-3` names the test users; "owner" and "guest" in it are underlined words that fill the field. The installed app (standalone display) shows the same two steps without the note, because Google's sign-in cannot return to an installed app on iOS. A message under a field is 0.875rem in `ink-2`.
 - **No access:** the same frame, left-aligned in the 600px column, nearer the top (`max(3rem, 12dvh)`), and it fades in over 240ms. The mark stays empty: this account has no data. The title "No access", a plain paragraph, then the user id and the command, each with a label (0.875rem at 500, `ink-3`) and a "Copy" text action (a bold Phosphor copy icon; "Copied" with a check for 1.6s). The values are in the code type. The command breaks between its words, never inside one. "Sign out" is a quiet button.
+
+### App icon
+
+- **Drawing:** one Day gauge, two thirds full, in the dark theme's `habit-blue` on the dark theme's pure black ground: the gauge is the signature of the app, and black is the owner's theme. The gauge has its squircle corners and its frame (35% of the color), 53% of the side, inside the 80% safe circle of a maskable icon.
+- **Files** (`apps/web/public/`, drawn by `scripts/icons.ts`, `vp -C apps/web run icons`): `apple-touch-icon.png` (180px, full bleed; iOS rounds it), `icon-maskable-*.png` (full bleed), `icon-*.png` ("any": a black squircle tile on transparent, for a desktop install), `icon.svg` and `favicon.ico` (the gauge alone).
+- **Theme colors:** `theme-color` follows the scheme (white, black). The manifest takes one value, black, for both `theme_color` and `background_color`, the color of the icon's ground.
 
 ### Motion grammar
 
