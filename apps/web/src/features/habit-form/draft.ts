@@ -178,6 +178,8 @@ function issueMessage(issue: HabitIssue, form: Pick<FormState, "kind" | "directi
           return `${limits.max} options at most.`;
         case "emptyLabel":
           return "Each option needs a label.";
+        case "labelTooLong":
+          return "Keep each label to 40 characters.";
         case "duplicateLabel":
           return "Two options have the same label.";
       }

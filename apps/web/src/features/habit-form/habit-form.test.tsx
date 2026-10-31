@@ -198,6 +198,15 @@ describe("validation", () => {
     expect(await within(dialog).findByText("Keep the name to 60 characters.")).toBeTruthy();
   });
 
+  test("an option label over 40 characters is refused at once", async () => {
+    const app = renderApp("/?new=true");
+    const dialog = await startNew("Drink", "Choice");
+    type(await within(dialog).findByRole("textbox", { name: "Option 1 of 1" }), "x".repeat(41));
+    expect(await within(dialog).findByText("Keep each label to 40 characters.")).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Add habit" }));
+    expect(app.named("Drink")).toBeUndefined();
+  });
+
   test("a step of 0 and a target that is not a number are refused", async () => {
     const app = renderApp("/?new=true");
     const dialog = await startNew("Pages", "Number");

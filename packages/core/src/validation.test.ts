@@ -105,6 +105,20 @@ describe("validateHabitDraft", () => {
       ]);
     });
 
+    test("labels have 40 characters at most, after trimming, with an emoji as one", () => {
+      expect(validateHabitDraft(choice([option("a".repeat(40))]))).toEqual([]);
+      expect(validateHabitDraft(choice([option(` ${"a".repeat(40)} `)]))).toEqual([]);
+      expect(validateHabitDraft(choice([option("👨‍👩‍👧".repeat(40))]))).toEqual([]);
+      expect(validateHabitDraft(choice([option("a".repeat(41))]))).toEqual([
+        { field: "options", code: "labelTooLong" },
+      ]);
+    });
+
+    test("a retired Option keeps a label over 40 characters", () => {
+      const options = [option("a".repeat(41), { retiredAt: 5 }), option("Legs")];
+      expect(validateHabitDraft(choice(options))).toEqual([]);
+    });
+
     test("labels are unique, without regard to case and spaces", () => {
       expect(validateHabitDraft(choice([option("Legs"), option("legs ")]))).toEqual([
         { field: "options", code: "duplicateLabel" },

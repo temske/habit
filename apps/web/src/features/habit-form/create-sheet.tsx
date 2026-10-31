@@ -79,6 +79,7 @@ export function CreateHabitSheet({
   const issues = validateHabitDraft(draft);
   const messages = issueMessages(issues, form);
   const nameIssue = issues.find((issue) => issue.field === "name");
+  const labelTooLong = issues.some((issue) => issue.code === "labelTooLong");
   const kindFieldsKey =
     form.kind === "number"
       ? "number"
@@ -185,7 +186,7 @@ export function CreateHabitSheet({
             options: moveOffered(current.options, from, to),
           }))
         }
-        message={attempted ? messages.options : undefined}
+        message={attempted || labelTooLong ? messages.options : undefined}
       />
     ) : null;
 
