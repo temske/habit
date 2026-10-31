@@ -59,68 +59,74 @@ export function IconPicker({
 
   return (
     <div className="flex flex-col gap-3" style={habitColorStyle(color)}>
-      <div className="relative">
-        <MagnifyingGlassIcon
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 size-[1.125rem] text-ink-3"
-        />
-        <input
-          ref={search}
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          aria-label={emojiOnly ? "Search emoji, or type one" : "Search icons, or type an emoji"}
-          placeholder="Search, or type an emoji"
-          autoComplete="off"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          enterKeyHint="search"
-          onKeyDown={(event) => {
-            if (event.key !== "Enter") return;
-            event.preventDefault();
-            const first: HabitIconValue | undefined =
-              typedEmoji !== undefined
-                ? { type: "emoji", emoji: typedEmoji }
-                : icons[0] !== undefined
-                  ? { type: "phosphor", name: icons[0] }
-                  : emoji[0] !== undefined
-                    ? { type: "emoji", emoji: emoji[0] }
-                    : undefined;
-            if (first !== undefined) onPick(first);
-          }}
-          className={cn(fieldClass, "pr-11 pl-10 [&::-webkit-search-cancel-button]:hidden")}
-        />
-        {query === "" ? null : (
-          <button
-            type="button"
-            onClick={() => {
-              setQuery("");
-              search.current?.focus();
+      {/* In the two columns of a wide form, the search and the tabs share a row. */}
+      <div className="flex flex-col gap-3 min-[60rem]:flex-row min-[60rem]:items-center">
+        <div className="relative min-[60rem]:flex-1">
+          <MagnifyingGlassIcon
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 size-[1.125rem] text-ink-3"
+          />
+          <input
+            ref={search}
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            aria-label={emojiOnly ? "Search emoji, or type one" : "Search icons, or type an emoji"}
+            placeholder="Search, or type an emoji"
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="search"
+            onKeyDown={(event) => {
+              if (event.key !== "Enter") return;
+              event.preventDefault();
+              const first: HabitIconValue | undefined =
+                typedEmoji !== undefined
+                  ? { type: "emoji", emoji: typedEmoji }
+                  : icons[0] !== undefined
+                    ? { type: "phosphor", name: icons[0] }
+                    : emoji[0] !== undefined
+                      ? { type: "emoji", emoji: emoji[0] }
+                      : undefined;
+              if (first !== undefined) onPick(first);
             }}
-            aria-label="Clear the search"
-            className="absolute top-1/2 right-1 grid size-10 -translate-y-1/2 place-items-center rounded-full text-ink-3 hover:text-ink"
-          >
-            <XIcon weight="bold" aria-hidden className="text-[0.875rem]" />
-          </button>
-        )}
+            className={cn(fieldClass, "pr-11 pl-10 [&::-webkit-search-cancel-button]:hidden")}
+          />
+          {query === "" ? null : (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                search.current?.focus();
+              }}
+              aria-label="Clear the search"
+              className="absolute top-1/2 right-1 grid size-10 -translate-y-1/2 place-items-center rounded-full text-ink-3 hover:text-ink"
+            >
+              <XIcon weight="bold" aria-hidden className="text-[0.875rem]" />
+            </button>
+          )}
+        </div>
+
+        {trimmed === "" && !emojiOnly ? (
+          <Segmented
+            label="Icon type"
+            hideLabel
+            value={tab}
+            onChange={setTab}
+            options={[
+              { value: "icons", label: "Icons" },
+              { value: "emoji", label: "Emoji" },
+            ]}
+            className="min-[60rem]:w-64"
+          />
+        ) : null}
       </div>
 
-      {trimmed === "" && !emojiOnly ? (
-        <Segmented
-          label="Icon type"
-          hideLabel
-          value={tab}
-          onChange={setTab}
-          options={[
-            { value: "icons", label: "Icons" },
-            { value: "emoji", label: "Emoji" },
-          ]}
-        />
-      ) : null}
-
+      {/* The sheets put the button right under the grid, so the grid is cut at the button's top
+          edge; the space at the end of the scroll keeps the last row off the button. */}
       <div
-        className="-mx-1 h-[min(21rem,46dvh)] overflow-y-auto overscroll-contain px-1 pb-1"
+        className="-mx-1 h-[min(21rem,46dvh)] overflow-y-auto overscroll-contain px-1 pb-4"
         onKeyDown={moveFocusInGrid}
       >
         {trimmed !== "" ? (
@@ -136,7 +142,7 @@ export function IconPicker({
           />
         ) : tab === "icons" ? (
           PHOSPHOR_ICON_GROUPS.map((group) => (
-            <section key={group.label} className="mb-3">
+            <section key={group.label} className="mb-3 last:mb-0">
               <SectionLabel>{group.label}</SectionLabel>
               <Grid>
                 {group.names.map((name) => (

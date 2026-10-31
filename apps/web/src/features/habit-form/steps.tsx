@@ -39,6 +39,15 @@ const fading: Variants = {
 };
 
 /**
+ * The motion of a step, by the direction in its `custom` (1: forward, -1: back): it comes in from
+ * the side it lies on and leaves to the other side, or crossfades under reduced motion. The fields
+ * of a Kind move the same way, from the side of their Kind in the segmented control.
+ */
+export function stepVariants(reduceMotion: boolean): Variants {
+  return reduceMotion ? fading : moving;
+}
+
+/**
  * The steps of a sheet, after Family: the old step leaves fast with a blur, the new one comes in
  * from the side it lies on (forward from the right, back from the left), and the sheet's
  * MorphHeight carries the change of height. The leaving step pops out of the layout at once, so
@@ -82,7 +91,7 @@ export function Steps({
           key={step}
           data-step={step}
           custom={direction}
-          variants={reduceMotion ? fading : moving}
+          variants={stepVariants(reduceMotion)}
           initial="enter"
           animate="center"
           exit="exit"

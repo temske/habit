@@ -14,7 +14,7 @@ import { haptic } from "@/components/haptics";
 import { ResponsiveSheet } from "@/components/sheet";
 import { useIsWide } from "@/components/use-media-query";
 
-import { ColorSwatches, StepButton } from "./controls";
+import { ColorSwatches, FORM_SHEET_CLASS, FormColumns, StepButton } from "./controls";
 import {
   addOption,
   DEFAULT_ICON,
@@ -30,12 +30,11 @@ import {
   withKind,
   type FormState,
 } from "./draft";
-import { DirectionField, IconTile, KindField, NameFields, NumberFields } from "./fields";
+import { DirectionField, IconTile, KindField, KINDS, NameFields, NumberFields } from "./fields";
 import { IconPicker, OptionEmojiPicker } from "./icon-picker";
 import { suggestIcon } from "./icon-search";
 import { OptionsEditor } from "./options-editor";
-import { FADE_IN, FADE_OUT } from "./presence";
-import { Steps } from "./steps";
+import { stepVariants, Steps } from "./steps";
 
 const NO_STORED_OPTIONS: ReadonlySet<OptionId> = new Set();
 
@@ -43,9 +42,10 @@ const ICON_TILE = 'button[aria-label="Change icon"]';
 
 /**
  * The create sheet (`?new=true`). One step: the icon and the name, the description, the color, the
- * Kind and the Direction, and under them the fields of a number, a choice or a scale habit. The
- * icon picker and the emoji picker of an Option are steps of their own, and come back to the
- * form. "Add habit" creates the habit after the last one and closes the sheet.
+ * Direction and the Kind, and under them the fields of a number, a choice or a scale habit (in two
+ * columns where the window has room: see FormColumns). The icon picker and the emoji picker of an
+ * Option are steps of their own, and come back to the form. "Add habit" creates the habit after
+ * the last one and closes the sheet.
  */
 export function CreateHabitSheet({
   open,
@@ -67,6 +67,8 @@ export function CreateHabitSheet({
   // The tile's tint rises once, when the sheet opens, not each time the form comes back.
   const [leftForm, setLeftForm] = useState(false);
   const [step, setStep] = useState<"form" | "icon" | "emoji">("form");
+  // The side the last Kind lies on from the one before it: its fields come in from that side.
+  const [kindDirection, setKindDirection] = useState<1 | -1>(1);
   const [emojiFor, setEmojiFor] = useState<OptionId | null>(null);
   const [attempted, setAttempted] = useState(false);
   const [touched, setTouched] = useState({ target: false, step: false });
@@ -203,7 +205,7 @@ export function CreateHabitSheet({
               ? "Your first habit"
               : "New habit"
       }
-      className="sm:w-[min(25rem,100%)]"
+      className={FORM_SHEET_CLASS}
       {...(wide ? { initialFocus: nameRef } : {})}
       footer={
         step === "form" ? (
@@ -225,67 +227,88 @@ export function CreateHabitSheet({
         }
       >
         {step === "form" ? (
-          <div ref={formRef} className="relative flex flex-col gap-5">
-            <NameFields
-              icon={
-                <IconTile
-                  icon={form.icon}
-                  color={form.color}
-                  onClick={() => {
-                    setLeftForm(true);
-                    setEmojiFor(null);
-                    setStep("icon");
-                  }}
-                  fillOnMount={!leftForm}
-                />
+          <div ref={formRef}>
+            <FormColumns
+              looks={
+                <>
+                  <NameFields
+                    icon={
+                      <IconTile
+                        icon={form.icon}
+                        color={form.color}
+                        onClick={() => {
+                          setLeftForm(true);
+                          setEmojiFor(null);
+                          setStep("icon");
+                        }}
+                        fillOnMount={!leftForm}
+                      />
+                    }
+                    name={form.name}
+                    description={form.description}
+                    onName={onName}
+                    onDescription={(description) =>
+                      setForm((current) => ({ ...current, description }))
+                    }
+                    onEnter={onEnter}
+                    message={attempted || nameIssue?.code === "tooLong" ? messages.name : undefined}
+                    nameRef={nameRef}
+                  />
+                  <ColorSwatches
+                    value={form.color}
+                    onChange={(color) => setForm((current) => ({ ...current, color }))}
+                  />
+                </>
               }
-              name={form.name}
-              description={form.description}
-              onName={onName}
-              onDescription={(description) => setForm((current) => ({ ...current, description }))}
-              onEnter={onEnter}
-              message={attempted || nameIssue?.code === "tooLong" ? messages.name : undefined}
-              nameRef={nameRef}
+              tracking={
+                <>
+                  <DirectionField
+                    value={form.direction}
+                    onChange={(value) => setForm((current) => ({ ...current, direction: value }))}
+                  />
+                  <KindField
+                    value={form.kind}
+                    onChange={(kind) => {
+                      setKindDirection(KINDS.indexOf(kind) > KINDS.indexOf(form.kind) ? 1 : -1);
+                      setForm((current) => withKind(current, kind));
+                    }}
+                  />
+                  {/* A swipe, as between the steps: the new fields come in from the side of their
+                      Kind and the old ones leave to the other side. */}
+                  <AnimatePresence initial={false} mode="popLayout" custom={kindDirection}>
+                    {kindFields === null ? null : (
+                      <motion.div
+                        key={kindFieldsKey}
+                        data-kind-fields={kindFieldsKey}
+                        custom={kindDirection}
+                        variants={stepVariants(reduceMotion)}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                      >
+                        {kindFields}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              }
             />
-            <ColorSwatches
-              value={form.color}
-              onChange={(color) => setForm((current) => ({ ...current, color }))}
-            />
-            <KindField
-              value={form.kind}
-              onChange={(kind) => setForm((current) => withKind(current, kind))}
-            />
-            <DirectionField
-              value={form.direction}
-              onChange={(value) => setForm((current) => ({ ...current, direction: value }))}
-            />
-            <AnimatePresence initial={false} mode="popLayout">
-              {kindFields === null ? null : (
-                <motion.div
-                  key={kindFieldsKey}
-                  data-kind-fields={kindFieldsKey}
-                  initial={{ opacity: 0, filter: reduceMotion ? "blur(0px)" : "blur(2px)" }}
-                  animate={{ opacity: 1, filter: "blur(0px)", transition: FADE_IN }}
-                  exit={{
-                    opacity: 0,
-                    filter: reduceMotion ? "blur(0px)" : "blur(2px)",
-                    transition: FADE_OUT,
-                  }}
-                >
-                  {kindFields}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
-        ) : step === "emoji" ? (
-          <OptionEmojiPicker
-            emoji={form.options.find((option) => option.id === emojiFor)?.emoji}
-            color={form.color}
-            onPick={onPickEmoji}
-            autoFocus={wide}
-          />
         ) : (
-          <IconPicker value={form.icon} color={form.color} onPick={onPick} autoFocus={wide} />
+          // The picker runs down to the footer, so its grid is cut at the top edge of the button:
+          // this takes back the body's bottom padding.
+          <div className="-mb-5">
+            {step === "emoji" ? (
+              <OptionEmojiPicker
+                emoji={form.options.find((option) => option.id === emojiFor)?.emoji}
+                color={form.color}
+                onPick={onPickEmoji}
+                autoFocus={wide}
+              />
+            ) : (
+              <IconPicker value={form.icon} color={form.color} onPick={onPick} autoFocus={wide} />
+            )}
+          </div>
         )}
       </Steps>
     </ResponsiveSheet>

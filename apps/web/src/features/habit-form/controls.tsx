@@ -84,9 +84,11 @@ export function Segmented<T extends string>({
   disabled,
   tall,
   hideLabel,
+  className,
 }: {
   label: string;
   hideLabel?: boolean;
+  className?: string;
   value: T;
   onChange: (value: T) => void;
   options: readonly SegmentOption<T>[];
@@ -99,7 +101,7 @@ export function Segmented<T extends string>({
   const hintId = useId();
   const reduceMotion = useReducedMotion() === true;
   return (
-    <div>
+    <div className={className}>
       <SectionLabel id={labelId} hidden={hideLabel}>
         {label}
       </SectionLabel>
@@ -319,12 +321,30 @@ export function StepButton({
 /**
  * The buttons at the end of a step. They stick to the bottom of the sheet while the content above
  * scrolls (a long list of Options, a short desktop window, an open keyboard), so the main action
- * is always in reach. A short fade shows that content passes under them.
+ * is always in reach. What passes under them is cut at the top edge of the button, as under the
+ * sheet's footer.
  */
 export function StickyFooter({ children }: { children: ReactNode }) {
+  return <div className="sticky bottom-0 z-10 -mx-5 -mb-5 bg-surface px-5 pb-5">{children}</div>;
+}
+
+/**
+ * The width of a habit form's dialog: 25rem, so 8 color swatches and the Option rows have room,
+ * and two columns of 20rem where the window has room for them (960px and more; see FormColumns).
+ */
+export const FORM_SHEET_CLASS = "sm:w-[min(25rem,100%)] min-[60rem]:w-[min(44.5rem,100%)]";
+
+/**
+ * The two halves of a habit form: what the habit looks like (the icon, the name, the color) and
+ * how it is tracked (the Direction, the Kind and its fields). In a window of 960px and more they
+ * stand side by side, so the dialog fits without a scroll; a narrower window stacks them.
+ */
+export function FormColumns({ looks, tracking }: { looks: ReactNode; tracking: ReactNode }) {
   return (
-    <div className="sticky bottom-0 z-10 -mx-5 -mb-5 bg-surface px-5 pt-2 pb-5 before:pointer-events-none before:absolute before:inset-x-0 before:-top-4 before:h-4 before:bg-linear-to-b before:from-transparent before:to-surface">
-      {children}
+    <div className="flex flex-col gap-5 min-[60rem]:grid min-[60rem]:grid-cols-2 min-[60rem]:items-start min-[60rem]:gap-x-8">
+      <div className="flex min-w-0 flex-col gap-5">{looks}</div>
+      {/* `relative`: the fields of a Kind that leave are placed in it while they go. */}
+      <div className="relative flex min-w-0 flex-col gap-5">{tracking}</div>
     </div>
   );
 }

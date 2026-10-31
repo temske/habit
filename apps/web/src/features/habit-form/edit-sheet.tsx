@@ -16,7 +16,13 @@ import { haptic } from "@/components/haptics";
 import { ResponsiveSheet } from "@/components/sheet";
 import { useIsWide } from "@/components/use-media-query";
 
-import { ColorSwatches, SheetButton, StickyFooter } from "./controls";
+import {
+  ColorSwatches,
+  FORM_SHEET_CLASS,
+  FormColumns,
+  SheetButton,
+  StickyFooter,
+} from "./controls";
 import {
   addOption,
   cleanOptions,
@@ -185,7 +191,7 @@ export function EditHabitSheet({
       }}
       onExitComplete={onExitComplete}
       title={step === "icon" ? "Icon" : step === "emoji" ? "Emoji" : "Edit habit"}
-      className="sm:w-[min(25rem,100%)]"
+      className={FORM_SHEET_CLASS}
     >
       <Steps
         step={step}
@@ -198,13 +204,14 @@ export function EditHabitSheet({
               : `button[data-option-emoji="${emojiFor}"]`
         }
       >
+        {/* A picker runs down to Back, so its grid is cut at the top edge of the button. */}
         {step === "icon" ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col">
             <IconPicker value={form.icon} color={form.color} onPick={onPick} autoFocus={wide} />
             {back}
           </div>
         ) : step === "emoji" ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col">
             <OptionEmojiPicker
               emoji={form.options.find((option) => option.id === emojiFor)?.emoji}
               color={form.color}
@@ -215,112 +222,126 @@ export function EditHabitSheet({
           </div>
         ) : (
           <div className="flex flex-col gap-5">
-            <NameFields
-              icon={
-                <IconTile
-                  icon={form.icon}
-                  color={form.color}
-                  onClick={() => {
-                    setEmojiFor(null);
-                    setDirection(1);
-                    setStep("icon");
-                  }}
-                />
+            <FormColumns
+              looks={
+                <>
+                  <NameFields
+                    icon={
+                      <IconTile
+                        icon={form.icon}
+                        color={form.color}
+                        onClick={() => {
+                          setEmojiFor(null);
+                          setDirection(1);
+                          setStep("icon");
+                        }}
+                      />
+                    }
+                    name={form.name}
+                    description={form.description}
+                    onName={(name) => {
+                      const next = change({ name });
+                      typed("name", !hasIssue(next, "name"), () => ({ name: name.trim() }));
+                    }}
+                    onDescription={(description) => {
+                      change({ description });
+                      typed("description", true, () => ({ description: description.trim() }));
+                    }}
+                    onBlurName={() => settle("name")}
+                    onBlurDescription={() => settle("description")}
+                    message={messages.name}
+                  />
+                  <ColorSwatches
+                    value={form.color}
+                    onChange={(color) => {
+                      change({ color });
+                      update({ color });
+                    }}
+                  />
+                </>
               }
-              name={form.name}
-              description={form.description}
-              onName={(name) => {
-                const next = change({ name });
-                typed("name", !hasIssue(next, "name"), () => ({ name: name.trim() }));
-              }}
-              onDescription={(description) => {
-                change({ description });
-                typed("description", true, () => ({ description: description.trim() }));
-              }}
-              onBlurName={() => settle("name")}
-              onBlurDescription={() => settle("description")}
-              message={messages.name}
+              tracking={
+                <>
+                  <DirectionField
+                    value={form.direction}
+                    onChange={(value) => {
+                      change({ direction: value });
+                      update({ direction: value });
+                    }}
+                  />
+                  <div className="flex flex-col gap-4">
+                    <div className="flex h-6 items-center gap-2 text-ink-2">
+                      <span aria-hidden className="grid text-ink-3 [&>svg]:size-[1.125rem]">
+                        {KIND_ICONS[form.kind]}
+                      </span>
+                      <span className="font-medium">{KIND_LABELS[form.kind]}</span>
+                      <span className="ml-auto text-[0.875rem] text-ink-3">Set when created</span>
+                    </div>
+                    {form.kind === "number" ? (
+                      <NumberFields
+                        form={form}
+                        onChange={(patch) => {
+                          const next = change(patch);
+                          if (patch.unit !== undefined) {
+                            const unit = patch.unit.trim();
+                            typed("unit", true, () => ({ unit: unit === "" ? null : unit }));
+                          }
+                          if (patch.target !== undefined) {
+                            const target = parseDecimal(patch.target);
+                            typed("target", !hasIssue(next, "target"), () => ({
+                              target: target ?? null,
+                            }));
+                          }
+                          if (patch.step !== undefined) {
+                            const value = parseDecimal(patch.step);
+                            typed("step", !hasIssue(next, "step"), () => ({ step: value! }));
+                          }
+                        }}
+                        onBlur={(field) =>
+                          field === "unit" ? settle("unit") : commits.flush(field)
+                        }
+                        messages={{ target: messages.target, step: messages.step }}
+                      />
+                    ) : form.kind === "choice" || form.kind === "scale" ? (
+                      <OptionsEditor
+                        kind={form.kind}
+                        color={form.color}
+                        options={form.options}
+                        onLabel={(optionId, label) =>
+                          changeOptions(updateOption(form.options, optionId, { label }), "typing")
+                        }
+                        onPickEmoji={(optionId) => {
+                          commits.flush("options");
+                          setEmojiFor(optionId);
+                          setDirection(1);
+                          setStep("emoji");
+                        }}
+                        onBlurField={() => commits.flush("options")}
+                        onAdd={() => {
+                          const options = addOption(form.options);
+                          changeOptions(options, "now");
+                          return options[options.length - 1]!.id;
+                        }}
+                        onRemove={(optionId) => {
+                          const used = usedOptionIds(state, id).has(optionId);
+                          changeOptions(
+                            removeOption(form.options, optionId, { used, now: Date.now() }),
+                            "now",
+                          );
+                        }}
+                        onRestore={(optionId) =>
+                          changeOptions(restoreOption(form.options, optionId), "now")
+                        }
+                        onMove={(from, to) =>
+                          changeOptions(moveOffered(form.options, from, to), "now")
+                        }
+                        message={messages.options}
+                      />
+                    ) : null}
+                  </div>
+                </>
+              }
             />
-            <ColorSwatches
-              value={form.color}
-              onChange={(color) => {
-                change({ color });
-                update({ color });
-              }}
-            />
-            <DirectionField
-              value={form.direction}
-              onChange={(value) => {
-                change({ direction: value });
-                update({ direction: value });
-              }}
-            />
-            <div className="flex flex-col gap-4">
-              <div className="flex h-6 items-center gap-2 text-ink-2">
-                <span aria-hidden className="grid text-ink-3 [&>svg]:size-[1.125rem]">
-                  {KIND_ICONS[form.kind]}
-                </span>
-                <span className="font-medium">{KIND_LABELS[form.kind]}</span>
-                <span className="ml-auto text-[0.875rem] text-ink-3">Set when created</span>
-              </div>
-              {form.kind === "number" ? (
-                <NumberFields
-                  form={form}
-                  onChange={(patch) => {
-                    const next = change(patch);
-                    if (patch.unit !== undefined) {
-                      const unit = patch.unit.trim();
-                      typed("unit", true, () => ({ unit: unit === "" ? null : unit }));
-                    }
-                    if (patch.target !== undefined) {
-                      const target = parseDecimal(patch.target);
-                      typed("target", !hasIssue(next, "target"), () => ({
-                        target: target ?? null,
-                      }));
-                    }
-                    if (patch.step !== undefined) {
-                      const value = parseDecimal(patch.step);
-                      typed("step", !hasIssue(next, "step"), () => ({ step: value! }));
-                    }
-                  }}
-                  onBlur={(field) => (field === "unit" ? settle("unit") : commits.flush(field))}
-                  messages={{ target: messages.target, step: messages.step }}
-                />
-              ) : form.kind === "choice" || form.kind === "scale" ? (
-                <OptionsEditor
-                  kind={form.kind}
-                  color={form.color}
-                  options={form.options}
-                  onLabel={(optionId, label) =>
-                    changeOptions(updateOption(form.options, optionId, { label }), "typing")
-                  }
-                  onPickEmoji={(optionId) => {
-                    commits.flush("options");
-                    setEmojiFor(optionId);
-                    setDirection(1);
-                    setStep("emoji");
-                  }}
-                  onBlurField={() => commits.flush("options")}
-                  onAdd={() => {
-                    const options = addOption(form.options);
-                    changeOptions(options, "now");
-                    return options[options.length - 1]!.id;
-                  }}
-                  onRemove={(optionId) => {
-                    const used = usedOptionIds(state, id).has(optionId);
-                    changeOptions(
-                      removeOption(form.options, optionId, { used, now: Date.now() }),
-                      "now",
-                    );
-                  }}
-                  onRestore={(optionId) =>
-                    changeOptions(restoreOption(form.options, optionId), "now")
-                  }
-                  onMove={(from, to) => changeOptions(moveOffered(form.options, from, to), "now")}
-                  message={messages.options}
-                />
-              ) : null}
-            </div>
             <div className="pt-2">
               <SheetButton variant="destructive" onClick={onDelete} className="w-full">
                 <TrashIcon weight="bold" aria-hidden />

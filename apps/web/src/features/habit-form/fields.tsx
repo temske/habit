@@ -169,7 +169,7 @@ export function LabeledField({
   );
 }
 
-/** The icon tile and the name on one row, and the description under them. */
+/** The icon tile and the name on one row, and the description under them, as tall as the name. */
 export function NameFields({
   icon,
   name,
@@ -236,7 +236,7 @@ export function NameFields({
         autoComplete="off"
         autoCapitalize="sentences"
         enterKeyHint="done"
-        className={cn(fieldClass, "text-ink-2")}
+        className={cn(fieldClass, "h-[3.25rem] text-ink-2")}
       />
     </div>
   );
@@ -258,9 +258,14 @@ export const KIND_LABELS: Record<Kind, string> = {
   text: "Text",
 };
 
-const KIND_OPTIONS: readonly SegmentOption<Kind>[] = (Object.keys(KIND_LABELS) as Kind[]).map(
-  (kind) => ({ value: kind, label: KIND_LABELS[kind], icon: KIND_ICONS[kind] }),
-);
+/** The Kinds in the order of the segmented control, from left to right. */
+export const KINDS = Object.keys(KIND_LABELS) as Kind[];
+
+const KIND_OPTIONS: readonly SegmentOption<Kind>[] = KINDS.map((kind) => ({
+  value: kind,
+  label: KIND_LABELS[kind],
+  icon: KIND_ICONS[kind],
+}));
 
 export function KindField({ value, onChange }: { value: Kind; onChange: (kind: Kind) => void }) {
   return (
