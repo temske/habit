@@ -45,7 +45,7 @@ interface Box {
 /** What a zoom measures before the layout changes, to start from there. */
 type Before =
   | { direction: "out"; height: number; layer: Box; grid: Box | null }
-  | { direction: "in"; height: number; target: Month; cell: Box; mini: Box };
+  | { direction: "in"; height: number; target: Month; mini: Box };
 
 export interface MonthZoom {
   /** The Days of a Month, or the months of a year in their place. */
@@ -61,7 +61,6 @@ export interface MonthZoom {
   stageRef: RefObject<HTMLDivElement | null>;
   daysRef: RefObject<HTMLDivElement | null>;
   monthsRef: RefObject<HTMLDivElement | null>;
-  ghostRef: RefObject<HTMLSpanElement | null>;
   zoomOut: () => void;
   zoomIn: (month: Month) => void;
   /**
@@ -82,10 +81,10 @@ export interface MonthZoom {
 
 /**
  * The calendar zooms out in place, from the Days of its Month to the months of its year, and back
- * into a month. On the way out the Days shrink onto the open Month's small calendar and fade, a
- * shape grows from the calendar into that month's cell, and the other months come in around it,
- * the nearest first; the way in is the same in reverse. All of it runs on the morph spring, and
- * the height of the calendar follows. Under reduced motion the two levels crossfade.
+ * into a month. On the way out the Days shrink onto the open Month's small calendar and fade into
+ * it, and the other months come in around it, the nearest first; the way in is the same in
+ * reverse. All of it runs on the morph spring, and the height of the calendar follows. Under
+ * reduced motion the two levels crossfade.
  */
 export function useMonthZoom({
   month,
@@ -107,7 +106,6 @@ export function useMonthZoom({
   const stageRef = useRef<HTMLDivElement>(null);
   const daysRef = useRef<HTMLDivElement>(null);
   const monthsRef = useRef<HTMLDivElement>(null);
-  const ghostRef = useRef<HTMLSpanElement>(null);
   const [level, setLevel] = useState<"days" | "months">("days");
   const [year, setYear] = useState(() => yearOf(month));
   const [phase, setPhase] = useState<"out" | "in" | null>(null);
@@ -153,7 +151,6 @@ export function useMonthZoom({
       direction: "in",
       height: stage.offsetHeight,
       target,
-      cell: boxOf(stage, cell),
       mini: boxOf(stage, mini),
     };
     setPreviousLabel(String(year));
@@ -196,8 +193,8 @@ export function useMonthZoom({
       reduceMotion || cell === null
         ? crossfade(snapshot.direction, days, months)
         : snapshot.direction === "out"
-          ? zoomOutMotion(snapshot, stage, days, months, cell, ghostRef.current)
-          : zoomInMotion(snapshot, stage, days, months, cell, ghostRef.current);
+          ? zoomOutMotion(snapshot, stage, days, months, cell)
+          : zoomInMotion(snapshot, stage, days, months, cell);
     const label = labelMotion(triggerRef.current, reduceMotion);
     let live = true;
     void motion.finished.then(() => {
@@ -329,7 +326,6 @@ export function useMonthZoom({
     stageRef,
     daysRef,
     monthsRef,
-    ghostRef,
     zoomOut,
     zoomIn,
     backTo,
@@ -357,21 +353,14 @@ function zoomOutMotion(
   days: HTMLElement,
   months: HTMLElement,
   cell: HTMLElement,
-  ghost: HTMLElement | null,
 ): Motion {
   const { duration } = morphTiming;
   const mini = cell.querySelector<HTMLElement>(".hp-months-mini");
-  const cellBox = boxOf(stage, cell);
-  const animations: Animation[] = [];
-  cell.dataset.zoomTarget = "";
-  animations.push(
-    stage.animate(
-      [{ height: `${before.height}px` }, { height: `${stage.offsetHeight}px` }],
-      morphTiming,
-    ),
+  const height = stage.animate(
+    [{ height: `${before.height}px` }, { height: `${stage.offsetHeight}px` }],
+    morphTiming,
   );
-  const growth = ghostMotion(ghost, stage, before.layer, cellBox, "out");
-  animations.push(growth);
+  const animations: Animation[] = [height];
   const inside = cell.querySelector(".hp-months-in");
   if (inside !== null) {
     animations.push(
@@ -423,14 +412,7 @@ function zoomOutMotion(
       ),
     );
   });
-  const motion = together(animations, growth);
-  return {
-    finished: motion.finished,
-    cancel: () => {
-      delete cell.dataset.zoomTarget;
-      motion.cancel();
-    },
-  };
+  return together(animations, height);
 }
 
 function zoomInMotion(
@@ -439,21 +421,15 @@ function zoomInMotion(
   days: HTMLElement,
   months: HTMLElement,
   cell: HTMLElement,
-  ghost: HTMLElement | null,
 ): Motion {
   const { duration } = morphTiming;
   const layer = boxOf(stage, days);
   const grid = daysGrid(stage, days);
-  const animations: Animation[] = [];
-  cell.dataset.zoomTarget = "";
-  animations.push(
-    stage.animate(
-      [{ height: `${before.height}px` }, { height: `${stage.offsetHeight}px` }],
-      morphTiming,
-    ),
+  const height = stage.animate(
+    [{ height: `${before.height}px` }, { height: `${stage.offsetHeight}px` }],
+    morphTiming,
   );
-  const shrink = ghostMotion(ghost, stage, before.cell, layer, "in");
-  animations.push(shrink);
+  const animations: Animation[] = [height];
   const inside = cell.querySelector(".hp-months-in");
   if (inside !== null) {
     animations.push(
@@ -493,41 +469,7 @@ function zoomInMotion(
       weekdays.animate([{ opacity: 0 }, { opacity: 0, offset: 0.6 }, { opacity: 1 }], { duration }),
     );
   }
-  const motion = together(animations, shrink);
-  return {
-    finished: motion.finished,
-    cancel: () => {
-      delete cell.dataset.zoomTarget;
-      motion.cancel();
-    },
-  };
-}
-
-/** The shape of the open Month: it grows from the calendar into the month's cell, or back. */
-function ghostMotion(
-  ghost: HTMLElement | null,
-  stage: HTMLElement,
-  from: Box,
-  to: Box,
-  direction: "out" | "in",
-): Animation {
-  const fill = getComputedStyle(stage).getPropertyValue("--surface-2");
-  const radius = ghost === null ? "0px" : getComputedStyle(ghost).borderTopLeftRadius;
-  const frame = (box: Box, background: string, corner: string): Keyframe => ({
-    left: `${box.x}px`,
-    top: `${box.y}px`,
-    width: `${box.w}px`,
-    height: `${box.h}px`,
-    background,
-    borderRadius: corner,
-  });
-  const calendar = (box: Box) => frame(box, "transparent", "0px");
-  const card = (box: Box) => frame(box, fill, radius);
-  const keyframes = direction === "out" ? [calendar(from), card(to)] : [card(from), calendar(to)];
-  return (ghost ?? stage).animate(ghost === null ? [] : keyframes, {
-    ...morphTiming,
-    fill: "forwards",
-  });
+  return together(animations, height);
 }
 
 /** The old label fades out quickly, and the new one fades in after it. */
@@ -569,15 +511,30 @@ function boxOf(stage: Element, node: Element): Box {
   return { x: rect.left - origin.left, y: rect.top - origin.top, w: rect.width, h: rect.height };
 }
 
-/** The Days of the shown page, without its side padding. */
+/**
+ * The squares of the shown page, from the left edge of its first column's square to the right
+ * edge of its last column's, and from the top of its first row's: the part that lands on the
+ * small calendar. Each square sits in the middle of its cell.
+ */
 function daysGrid(stage: Element, days: Element): Box | null {
   const page = days.querySelector<HTMLElement>('[data-slot="0"]');
-  if (page === null) return null;
+  const square = page?.querySelector<HTMLElement>(".hp-day-box") ?? null;
+  const cell = square?.closest<HTMLElement>(".hp-day") ?? null;
+  if (page === null || square === null || cell === null) return null;
   const box = boxOf(stage, page);
   const style = getComputedStyle(page);
   const left = Number.parseFloat(style.paddingLeft) || 0;
   const right = Number.parseFloat(style.paddingRight) || 0;
-  return { x: box.x + left, y: box.y, w: box.w - left - right, h: box.h };
+  const inner = square.getBoundingClientRect();
+  const outer = cell.getBoundingClientRect();
+  const inset = (outer.width - inner.width) / 2;
+  const top = inner.top - outer.top;
+  return {
+    x: box.x + left + inset,
+    y: box.y + top,
+    w: box.w - left - right - 2 * inset,
+    h: box.h - top,
+  };
 }
 
 /**
@@ -679,7 +636,7 @@ const MiniMonth = memo(function MiniMonth({
               color={habit.color}
               intensity={intensity(habit, value)}
               recorded={value !== undefined}
-              size="0.5rem"
+              size="var(--mini-cell)"
               look="flat"
               animated={false}
             />

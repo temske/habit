@@ -108,15 +108,15 @@
 
   .hp-identity > :first-child {
     /* On the first line of the name. */
-    margin-top: calc((1.875rem - var(--hp-icon)) / 2);
+    margin-top: calc((1.75rem - var(--hp-icon)) / 2);
   }
 
   .hp-name {
     min-width: 0;
     color: var(--ink);
-    font-size: 1.5rem;
+    font-size: 1.375rem;
     font-weight: 600;
-    line-height: 1.875rem;
+    line-height: 1.75rem;
     letter-spacing: -0.02em;
     overflow-wrap: anywhere;
     text-wrap: balance;
@@ -139,24 +139,23 @@
     overflow-wrap: anywhere;
   }
 
+  /* A habit with no description keeps the room of one (its margin and its line), so the grid and
+     the calendar stay in place when the page changes to another habit. */
+  .hp-identity + .hp-year {
+    margin-top: calc(0.125rem + 1.375rem + 1.75rem);
+  }
+
   /* ── The grid of the last 12 months ── */
 
   /* A sideways scroller from edge to edge of the column, so the squares pass under its edges; at
-     rest the grid lines up with the gutter. The edges fade, which also tells that it scrolls. */
+     rest the grid lines up with the gutter. */
   .hp-year {
     display: flex;
-    margin-top: 2rem;
+    margin-top: 1.75rem;
     padding: 0 var(--gutter);
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
-    mask-image: linear-gradient(
-      to right,
-      transparent,
-      black var(--gutter),
-      black calc(100% - var(--gutter)),
-      transparent
-    );
   }
 
   .hp-year::-webkit-scrollbar {
@@ -227,41 +226,68 @@
   /* ── The calendar ── */
 
   /* The container of the calendar: a square is as wide as its column allows, also on a 320px
-     phone or with large text. */
+     phone or with large text. The levels of the zoom start at its top, with no margin of their
+     own: a margin would collapse out of the stage while a level is in the flow, and stay inside
+     it while the level lies over the other one, so the level would jump during a zoom. */
   .hp-cal {
-    margin-top: 1.75rem;
+    margin-top: 2rem;
     padding: 0 var(--gutter);
     container-type: inline-size;
   }
 
-  /* Under the Days, near the thumb: the name of the Month at the left, the paging at the right. */
+  /* Under the Days, near the thumb: the name of the Month at the left, the paging at the right.
+     The controls stand between the gutters, so the fill of the first and the last meets them. */
   .hp-cal-controls {
     display: flex;
     align-items: center;
     min-height: 2.75rem;
-    margin: 0.25rem -0.75rem 0 0;
+    margin-top: 0.25rem;
   }
 
-  /* The name of the Month, as plain text: a tap opens the picker. Its touch target reaches past
-     the text, so the text lines up with the gutter. */
+  /* The controls share one look: plain at rest, and a squircle of 6% ink with `ink` text under a
+     fine pointer and while pressed. A disabled arrow takes neither. */
+  .hp-cal-month,
+  .hp-cal-today,
+  .hp-cal-arrow {
+    height: 2.75rem;
+    border-radius: calc(0.625rem * var(--squircle-k));
+    corner-shape: squircle;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      opacity 120ms ease,
+      transform 120ms var(--ease-out);
+  }
+
+  .hp-cal-month:active,
+  .hp-cal-today:active,
+  .hp-cal-arrow:active:not(:disabled) {
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    color: var(--ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hp-cal-month:hover,
+    .hp-cal-today:hover,
+    .hp-cal-arrow:hover:not(:disabled) {
+      background: color-mix(in oklch, var(--ink) 6%, transparent);
+      color: var(--ink);
+    }
+  }
+
+  /* The name of the Month, as plain text: a tap opens the picker. */
   .hp-cal-month {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    height: 2.75rem;
-    margin: 0 auto 0 -0.5rem;
-    padding: 0 0.5rem;
+    margin-right: auto;
+    padding: 0 0.625rem;
     color: var(--ink);
     font-size: 0.9375rem;
     font-weight: 600;
     letter-spacing: -0.01em;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
-    border-radius: calc(0.625rem * var(--squircle-k));
-    corner-shape: squircle;
-    transition:
-      background-color 120ms ease,
-      transform 120ms var(--ease-out);
   }
 
   .hp-cal-month svg {
@@ -286,38 +312,22 @@
 
   .hp-cal-month:active {
     transform: scale(0.97);
-    background: color-mix(in oklch, var(--ink) 6%, transparent);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .hp-cal-month:hover {
-      background: color-mix(in oklch, var(--ink) 6%, transparent);
-    }
   }
 
   .hp-cal-today {
-    height: 2.75rem;
     padding: 0 0.625rem;
     color: var(--ink-2);
     font-size: 0.9375rem;
     font-weight: 500;
     letter-spacing: -0.01em;
-    transition:
-      color 120ms ease,
-      transform 120ms var(--ease-out);
   }
 
   .hp-cal-arrow {
     display: grid;
     place-items: center;
     width: 2.75rem;
-    height: 2.75rem;
     color: var(--ink-2);
     font-size: 1.125rem;
-    transition:
-      color 120ms ease,
-      opacity 120ms ease,
-      transform 120ms var(--ease-out);
   }
 
   .hp-cal-arrow:disabled {
@@ -328,20 +338,22 @@
   .hp-cal-today:active,
   .hp-cal-arrow:active:not(:disabled) {
     transform: scale(0.96);
-    color: var(--ink);
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .hp-cal-today:hover,
-    .hp-cal-arrow:hover:not(:disabled) {
-      color: var(--ink);
-    }
+  /* The measures of the Days, between the gutters (`100cqw`). A cell is a 44px touch target or
+     more. The first and the last square meet the gutters, and the room between them is shared
+     out evenly. */
+  .hp-cal-days {
+    --cal-square: min(3rem, 100cqw / 7 - 0.5rem);
+    --cal-gap: calc((100cqw - 7 * var(--cal-square)) / 6);
+    --cal-row: calc(var(--cal-square) + 0.5rem);
   }
 
+  /* Each letter over the middle of its square. */
   .hp-cal-weekdays {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    margin-top: 0.25rem;
+    grid-template-columns: repeat(7, var(--cal-square));
+    justify-content: space-between;
     color: var(--ink-3);
     font-size: 0.75rem;
     font-weight: 500;
@@ -352,9 +364,6 @@
   /* The pages slide edge to edge of the column, so the clip is at its edges, not at the gutter. Its
      height is the weeks of the Month (`--rows`, set by the calendar as the pages move). */
   .hp-cal-viewport {
-    /* A cell is a 44px touch target or more. */
-    --cal-square: min(3rem, 100cqw / 7 - 0.5rem);
-    --cal-row: calc(var(--cal-square) + 0.5rem);
     /* The notch at the top left of a Day, for its date: the gauge's square without that corner. */
     --hp-notch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M22.5 0H27C36.36 0 40 3.64 40 13V27C40 36.36 36.36 40 27 40H13C3.64 40 0 36.36 0 27V18.5A3.5 3.5 0 0 1 3.5 15H14A5 5 0 0 0 19 10V3.5A3.5 3.5 0 0 1 22.5 0Z'/%3E%3C/svg%3E");
     position: relative;
@@ -373,13 +382,15 @@
     inset: 0;
   }
 
+  /* A column is a square and a gap wide, so the gap is part of the touch target; the half gaps
+     at the ends reach past the gutters. */
   .hp-month {
     position: absolute;
     inset: 0 0 auto;
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-auto-rows: var(--cal-row);
-    padding: 0 var(--gutter);
+    padding: 0 calc(var(--gutter) - var(--cal-gap) / 2);
   }
 
   .hp-day {
@@ -539,25 +550,11 @@
     z-index: 1;
   }
 
-  /* The open Month's shape, which grows from the calendar into its cell, or back. */
-  .hp-cal-ghost {
-    position: absolute;
-    display: none;
-    border-radius: calc(0.75rem * var(--squircle-k));
-    corner-shape: squircle;
-    pointer-events: none;
-  }
-
-  .hp-cal-stage[data-zoom] > .hp-cal-ghost {
-    display: block;
-  }
-
   .hp-months {
     position: relative;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0.25rem 0.375rem;
-    margin-top: 0.25rem;
     /* The page keeps the vertical scroll; a horizontal swipe flips the year. */
     touch-action: pan-y;
   }
@@ -577,15 +574,6 @@
     border-radius: inherit;
     corner-shape: squircle;
     transition: background-color 120ms ease;
-  }
-
-  .hp-months-cell[aria-current] .hp-months-bg {
-    background: var(--surface-2);
-  }
-
-  /* The ghost stands in for the fill of the month that the zoom goes to or comes from. */
-  .hp-months-cell[data-zoom-target] .hp-months-bg {
-    visibility: hidden;
   }
 
   .hp-months-in {
@@ -614,13 +602,16 @@
     opacity: 0.5;
   }
 
+  /* Six weeks high, so all the months of a row line up. Three of them fit a 320px phone. */
   .hp-months-mini {
+    --mini-cell: 0.625rem;
+    --mini-gap: 0.125rem;
     display: grid;
-    grid-template-columns: repeat(7, 0.5rem);
-    grid-auto-rows: 0.5rem;
+    grid-template-columns: repeat(7, var(--mini-cell));
+    grid-auto-rows: var(--mini-cell);
     align-content: start;
-    gap: 0.125rem;
-    height: calc(6 * 0.5rem + 5 * 0.125rem);
+    gap: var(--mini-gap);
+    height: calc(6 * var(--mini-cell) + 5 * var(--mini-gap));
   }
 
   .hp-months-cell:active:not(:disabled) {
@@ -628,7 +619,7 @@
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .hp-months-cell:hover:not(:disabled, [aria-current]) .hp-months-bg {
+    .hp-months-cell:hover:not(:disabled) .hp-months-bg {
       background: color-mix(in oklch, var(--ink) 6%, transparent);
     }
   }

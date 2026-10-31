@@ -546,7 +546,6 @@ export function MonthCalendar({ habit, today, month, onMonthChange }: MonthCalen
         data-zoom={zoom.phase ?? undefined}
         inert={zooming}
       >
-        <span ref={zoom.ghostRef} className="hp-cal-ghost" aria-hidden />
         <div ref={zoom.daysRef} className="hp-cal-days" inert={atMonths}>
           <div className="hp-cal-weekdays" aria-hidden>
             {WEEKDAYS.map((letter, index) => (
