@@ -4,5 +4,5 @@
     "lib": ["ESNext", "DOM"],
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "e2e"]
+  "include": ["vite.config.ts", "vercel.ts", "e2e"]
 }

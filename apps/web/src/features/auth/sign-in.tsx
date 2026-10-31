@@ -12,8 +12,17 @@ const TEST_USERS = {
 } as const;
 
 /**
- * Signed out: the mark, the name, and one action, "Continue with Google". In development a
- * sign-in with an email code is one tap further, so the test users can sign in.
+ * The email code is for the Clerk development instance, whose test users take the code 424242:
+ * in the dev server, and in a build on that instance, such as the deployment at habit.tem.sh
+ * (docs/deploy.md). A build on a production instance offers Google only.
+ */
+const offerEmailCode =
+  import.meta.env.DEV ||
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.startsWith("pk_test_") === true;
+
+/**
+ * Signed out: the mark, the name, and one action, "Continue with Google". On the Clerk development
+ * instance a sign-in with an email code is one tap further, so the test users can sign in.
  */
 export function SignInScreen({
   signIn,
@@ -48,7 +57,7 @@ export function SignInScreen({
           <GoogleLogoIcon weight="bold" className="size-4.5" aria-hidden />
           {opening ? "Opening Google…" : "Continue with Google"}
         </AuthButton>
-        {import.meta.env.DEV && emailCode !== undefined ? (
+        {offerEmailCode && emailCode !== undefined ? (
           <EmailCodeSection emailCode={emailCode} />
         ) : null}
       </div>
@@ -58,7 +67,7 @@ export function SignInScreen({
 
 type Step = { name: "closed" } | { name: "email" } | { name: "code"; email: string };
 
-/** Development only: a sign-in with a code from an email, in two short steps. */
+/** The development instance only: a sign-in with a code from an email, in two short steps. */
 function EmailCodeSection({ emailCode }: { emailCode: EmailCodeSignIn }) {
   const [step, setStep] = useState<Step>({ name: "closed" });
   const [email, setEmail] = useState("");
