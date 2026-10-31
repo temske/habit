@@ -9,7 +9,8 @@
  * signs in with the email code of the test users, and goes through v1: a habit of each Kind, a
  * tap, a paint and its Undo, the input of a value, a reorder, the habit page and its calendar, an
  * edit, a delete and its Undo, the instant start from the snapshot, the data after a new sign-in,
- * and "no access" for the guest. Screenshots go to $E2E_SHOTS (default: <tmp>/habit-e2e).
+ * and "no access" for the guest. At the end it deletes the owner test user's data again.
+ * Screenshots go to $E2E_SHOTS (default: <tmp>/habit-e2e).
  *
  * Settings, all optional: E2E_URL (use a running dev server on the real backend instead of
  * starting one), E2E_PORT (default 5433), E2E_HEADED=true (show the browser), E2E_CHROME (the
@@ -22,6 +23,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright-core";
+import { loadEnv } from "vite-plus";
 
 const OWNER = {
   email: "habit-owner+clerk_test@example.com",
@@ -35,6 +37,7 @@ const GUEST = {
 const CODE = "424242";
 
 const ROOT = fileURLToPath(new URL("../../..", import.meta.url));
+const WEB = fileURLToPath(new URL("..", import.meta.url));
 const PORT = Number(process.env.E2E_PORT ?? 5433);
 const BASE = process.env.E2E_URL ?? `http://127.0.0.1:${PORT}`;
 const SHOTS = process.env.E2E_SHOTS ?? join(tmpdir(), "habit-e2e");
@@ -51,19 +54,7 @@ let current: Page | null = null;
 async function main() {
   mkdirSync(SHOTS, { recursive: true });
   step("reset the owner's data");
-  execFileSync(
-    "vp",
-    [
-      "-C",
-      "packages/data",
-      "exec",
-      "convex",
-      "run",
-      "admin:deleteUserData",
-      JSON.stringify({ userId: OWNER.id }),
-    ],
-    { cwd: ROOT, stdio: "inherit" },
-  );
+  deleteOwnerData();
 
   const server = process.env.E2E_URL === undefined ? await startDevServer() : null;
   const browser = await chromium.launch({
@@ -85,6 +76,14 @@ async function main() {
   } finally {
     await browser.close();
     server?.stop();
+    step("delete the owner's data again: the run leaves nothing on the deployment");
+    try {
+      deleteOwnerData();
+    } catch (error) {
+      failures.push(
+        `the cleanup failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   if (pageErrors.length > 0) failures.push(`page errors:\n  ${pageErrors.join("\n  ")}`);
@@ -309,6 +308,31 @@ async function guestFlow(browser: Browser) {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Deletes every habit and Entry of the owner test user, and only of that user
+ * (`admin:deleteUserData` reads by the user id). The deployment is the one that the dev server
+ * talks to, from Vite's env of `apps/web`, so the reset needs no `packages/data/.env.local`.
+ */
+function deleteOwnerData() {
+  const url = new URL(loadEnv("development", WEB, "VITE_").VITE_CONVEX_URL!);
+  const deployment = url.hostname.split(".")[0]!;
+  execFileSync(
+    "vp",
+    [
+      "-C",
+      "packages/data",
+      "exec",
+      "convex",
+      "run",
+      "--deployment",
+      deployment,
+      "admin:deleteUserData",
+      JSON.stringify({ userId: OWNER.id }),
+    ],
+    { cwd: ROOT, stdio: "inherit" },
+  );
+}
+
 function step(name: string) {
   console.log(`• ${name}`);
 }
@@ -338,7 +362,21 @@ function same(actual: string[], expected: string[]): true | string {
 }
 
 async function newContext(browser: Browser): Promise<BrowserContext> {
-  return browser.newContext({ viewport: PHONE, colorScheme: "dark", deviceScaleFactor: 2 });
+  const context = await browser.newContext({
+    viewport: PHONE,
+    colorScheme: "dark",
+    deviceScaleFactor: 2,
+  });
+  // The dev server's lab panel (docs/lab.md) sits at the bottom left, over the sheets' buttons.
+  // The run keeps each lab control on its first option, as a production build does.
+  await context.addInitScript(() => {
+    document.addEventListener("DOMContentLoaded", () => {
+      const style = document.createElement("style");
+      style.textContent = 'aside[aria-label="Lab"] { display: none !important; }';
+      document.head.append(style);
+    });
+  });
+  return context;
 }
 
 async function newPage(context: BrowserContext): Promise<Page> {
@@ -368,10 +406,8 @@ async function createHabit(
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("textbox", { name: "Name" }).fill(habit.name);
   if (habit.kind !== "Check") await dialog.getByRole("radio", { name: habit.kind }).click();
-  if (habit.details !== undefined) {
-    await dialog.getByRole("button", { name: "Next" }).click();
-    await habit.details(page);
-  }
+  // The fields of the Kind come in on the same step, under the Kind.
+  if (habit.details !== undefined) await habit.details(page);
   await dialog.getByRole("button", { name: "Add habit" }).click();
   await dialog.waitFor({ state: "detached" });
   await page.getByRole("group", { name: habit.name, exact: true }).waitFor();
