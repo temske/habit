@@ -4,9 +4,13 @@ export type HabitIssue =
   | { field: "name"; code: "required" | "tooLong" }
   | { field: "target"; code: "notPositive" }
   | { field: "step"; code: "notPositive" }
-  | { field: "options"; code: "tooFew" | "tooMany" | "emptyLabel" | "duplicateLabel" };
+  | {
+      field: "options";
+      code: "tooFew" | "tooMany" | "emptyLabel" | "labelTooLong" | "duplicateLabel";
+    };
 
 const NAME_MAX_LENGTH = 60;
+const OPTION_LABEL_MAX_LENGTH = 40;
 const OPTION_COUNT = { choice: { min: 1, max: 12 }, scale: { min: 2, max: 5 } } as const;
 
 /**
@@ -14,7 +18,8 @@ const OPTION_COUNT = { choice: { min: 1, max: 12 }, scale: { min: 2, max: 5 } } 
  * - name: required after trimming, a maximum of 60 characters (an emoji counts as one).
  * - number: target (when set) and step above 0.
  * - choice: 1 to 12 Options that are not retired. scale: 2 to 5. Labels of these Options not empty
- *   and unique (after trimming, without regard to case). Retired Options are not checked.
+ *   and unique (after trimming, without regard to case), a maximum of 40 characters (an emoji
+ *   counts as one). Retired Options are not checked.
  */
 export function validateHabitDraft(draft: HabitDraft): HabitIssue[] {
   const issues: HabitIssue[] = [];
@@ -50,6 +55,9 @@ function optionIssues(options: Option[], count: { min: number; max: number }): H
 
   const labels = offered.map((option) => option.label.trim().toLowerCase());
   const filled = labels.filter((label) => label !== "");
+  // Before an empty label: the form shows a long label at once, while a new row is still empty.
+  if (filled.some((label) => characterCount(label) > OPTION_LABEL_MAX_LENGTH))
+    issues.push({ field: "options", code: "labelTooLong" });
   if (filled.length < labels.length) issues.push({ field: "options", code: "emptyLabel" });
   if (new Set(filled).size < filled.length)
     issues.push({ field: "options", code: "duplicateLabel" });
