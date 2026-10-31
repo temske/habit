@@ -11,6 +11,7 @@
 import type * as admin from "../admin.js";
 import type * as data from "../data.js";
 import type * as functions from "../functions.js";
+import type * as habitkit from "../habitkit.js";
 import type * as range from "../range.js";
 import type * as users from "../users.js";
 import type * as validators from "../validators.js";
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   data: typeof data;
   functions: typeof functions;
+  habitkit: typeof habitkit;
   range: typeof range;
   users: typeof users;
   validators: typeof validators;

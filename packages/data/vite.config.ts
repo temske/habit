@@ -2,7 +2,15 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   run: {
-    tasks: { unit: "vp test" },
+    tasks: {
+      unit: "vp test",
+      // The import of a HabitKit export (docs/import.md): `vp -C packages/data run
+      // import:habitkit <file> --dry-run`. It writes to a deployment, so it is never cached.
+      "import:habitkit": {
+        command: "node --import ./scripts/resolve-ts.ts scripts/import-habitkit.ts",
+        cache: false,
+      },
+    },
   },
   test: {
     name: "data",

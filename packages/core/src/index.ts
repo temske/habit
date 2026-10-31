@@ -2,6 +2,7 @@ export * from "./actions";
 export * from "./day";
 export * from "./entry";
 export * from "./habit";
+export * from "./habitkit";
 export * from "./ids";
 export * from "./input";
 export * from "./intensity";
