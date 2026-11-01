@@ -109,6 +109,16 @@ padding, and only scrolls the focused field into view. The footer sticks to the 
 The values are written in the viewport events, before Base UI measures in the next frame. Chrome
 on Android resizes the page for the keyboard, so there the sheet needs no help.
 
+Check 5 below failed on the owner's iPhone (iOS 26, installed app, Number, Step reached with the
+keyboard's arrows): the sheet sat about 34pt above the keyboard, with its top off the screen. So
+iOS had panned the visual viewport further than the last pan the tracker had read. The likely
+cause, not checked on a device: iOS moves it again after the event that started the move, with no
+event of its own; Base UI also scrolls the window back after the arrows' reveal scroll. The tracker
+now also listens to the window's scroll and to `focusin` and `focusout`, and after each of these
+events it measures the band again at every frame for 700ms. A frame that finds no change writes
+nothing. In Chrome, a fake `visualViewport` that pans 34px 200ms after a focus, with no event, now
+moves the band (top 0 to 34px, bottom 416 to 382px).
+
 ## The fixed header
 
 The sheet is a column: the handle and the header at the top, the footer at the bottom, and
