@@ -13,7 +13,6 @@ import { useAct } from "@/components/act";
 import { haptic } from "@/components/haptics";
 import { ResponsiveSheet } from "@/components/sheet";
 import { useIsWide } from "@/components/use-media-query";
-import { cn } from "@/lib/utils";
 
 import { ColorSwatches, FORM_SHEET_CLASS, FormColumns, StepButton } from "./controls";
 import {
@@ -38,7 +37,6 @@ import {
   FloatingPicker,
   InlinePicker,
   PickerFor,
-  STACKED_UNDER_CLASS,
   triggerSelector,
   usePicker,
   zoomVariants,
@@ -231,7 +229,7 @@ export function CreateHabitSheet({
               ? "Your first habit"
               : "New habit"
       }
-      className={cn(FORM_SHEET_CLASS, picker.place === "Stacked sheet" && STACKED_UNDER_CLASS)}
+      className={FORM_SHEET_CLASS}
       {...(wide ? { initialFocus: nameRef } : {})}
       footer={
         step === "form" ? (

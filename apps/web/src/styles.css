@@ -511,6 +511,8 @@
     --sheet-room: calc(2.5rem + env(safe-area-inset-top, 0px));
     /* Extra bottom padding of the content, to clear the home indicator under the sheet. */
     --sheet-clear: 0px;
+    /* The radius of all four corners, before the squircle factor. */
+    --sheet-corner: 1.25rem;
 
     position: fixed;
     top: var(--sheet-vv-top, 0px);
@@ -533,32 +535,99 @@
   }
 
   /* The installed app, keyboard closed: the sheet sits 0.5rem from the screen's bottom edge, over
-     the home indicator, and its bottom corners are concentric with the display's (as in Family). */
+     the home indicator, and its corners are concentric with the display's. All four corners
+     take that radius, as a floating sheet of iOS 26 does: a large bottom with a small top looked
+     wrong. */
   .sheet-viewport[data-hug] {
     --sheet-below: 0px;
     --sheet-clear: max(0px, env(safe-area-inset-bottom, 0px) - 0.5rem);
+    --sheet-corner: calc(var(--display-radius) - 0.5rem);
   }
 
+  /* A sheet over a sheet (the icon picker over the habit form): it leaves 0.625rem more room at
+     the top, so the sheet under it, which rises by that much, always shows its top edge. */
+  .sheet-viewport[data-nested] {
+    --sheet-room: calc(3.125rem + env(safe-area-inset-top, 0px));
+  }
+
+  .sheet-viewport[data-nested][data-keyboard] {
+    --sheet-room: calc(1.625rem + env(safe-area-inset-top, 0px));
+  }
+
+  /* A column: the handle and the header at the top, the footer at the bottom, and between them
+     the body, the only part that scrolls (.sheet-scroll). */
   .sheet-popup {
     position: relative;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     max-width: 30rem;
     max-height: calc(100% - var(--sheet-room));
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    overflow: hidden;
     background: var(--surface);
     color: var(--ink);
-    border-radius: calc(1.25rem * var(--squircle-k));
+    border-radius: calc(var(--sheet-corner) * var(--squircle-k));
     corner-shape: squircle;
     box-shadow: var(--elevation);
     outline: none;
     transform: translateY(var(--drawer-swipe-movement-y, 0px));
-    transition: transform var(--spring-sheet, 450ms var(--ease-drawer));
+    transition:
+      transform var(--spring-sheet, 450ms var(--ease-drawer)),
+      translate var(--spring-sheet, 450ms var(--ease-drawer)),
+      scale var(--spring-sheet, 450ms var(--ease-drawer)),
+      filter var(--spring-sheet, 450ms var(--ease-drawer));
   }
 
-  .sheet-viewport[data-hug] .sheet-popup {
-    border-end-start-radius: calc((var(--display-radius) - 0.5rem) * var(--squircle-k));
-    border-end-end-radius: calc((var(--display-radius) - 0.5rem) * var(--squircle-k));
+  .sheet-content {
+    display: flex;
+    flex: 0 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .sheet-content > .sheet-header,
+  .sheet-content > .sheet-footer {
+    flex: none;
+  }
+
+  .sheet-scroll {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* The sheet under a stacked sheet steps back, as on iOS: a little smaller, dimmer, and raised
+     until its top edge shows 0.625rem above the sheet in front (which is at most that much shorter,
+     see .sheet-viewport[data-nested]). A swipe of the sheet in front brings it back in step with
+     the finger (Base UI sets --drawer-swipe-progress on it from the nested swipe). */
+  .sheet-popup[data-nested-drawer-open] {
+    --stack: calc(1 - clamp(0, var(--drawer-swipe-progress, 0), 1));
+    --stack-lift: calc(
+      min(0px, var(--drawer-height) - var(--drawer-frontmost-height, var(--drawer-height))) -
+        0.625rem
+    );
+
+    transform-origin: 50% 0;
+    translate: 0 calc(var(--stack-lift) * var(--stack));
+    scale: calc(1 - 0.06 * var(--stack));
+    filter: brightness(calc(1 - 0.1 * var(--stack)));
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sheet-popup[data-nested-drawer-open] {
+      filter: brightness(calc(1 - 0.4 * var(--stack)));
+    }
+  }
+
+  /* One grabber: the one of the sheet in front. */
+  .sheet-popup[data-nested-drawer-open] > .sheet-handle {
+    opacity: calc(1 - var(--stack));
+  }
+
+  .sheet-popup[data-nested-drawer-swiping],
+  .sheet-popup[data-nested-drawer-swiping] > .sheet-handle {
+    transition-duration: 0ms;
   }
 
   .sheet-popup[data-starting-style],
@@ -585,6 +654,7 @@
     border-radius: 999px;
     background: var(--line-strong);
     translate: -50% 0;
+    transition: opacity 200ms var(--ease-out);
   }
 
   /* Desktop: a centered dialog. */
@@ -623,13 +693,27 @@
     outline: none;
     transition:
       transform 200ms var(--ease-out),
-      opacity 200ms var(--ease-out);
+      opacity 200ms var(--ease-out),
+      scale 200ms var(--ease-out),
+      filter 200ms var(--ease-out);
   }
 
   .dialog-popup[data-starting-style],
   .dialog-popup[data-ending-style] {
     opacity: 0;
     transform: scale(0.96);
+  }
+
+  /* A dialog under a stacked one (the icon picker over the habit form) steps back and dims. */
+  .dialog-popup[data-nested-dialog-open] {
+    scale: 0.96;
+    filter: brightness(0.9);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .dialog-popup[data-nested-dialog-open] {
+      filter: brightness(0.6);
+    }
   }
 
   /* Desktop: a popover at the element it is about (a Day square). */
@@ -660,10 +744,14 @@
      edge, in every form of the sheet. The title is centered on the disc; a description goes under
      the title. */
   .sheet-header {
+    /* Larger corners move the close disc in, so it stays clear of the curve: 0.75rem from the
+       edges at the normal radius, 1rem at the 54px corners of a 17 Pro. */
+    --sheet-header-inset: max(0.75rem, var(--sheet-corner, 0px) * 0.3);
+
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    padding: 0.75rem 0.75rem 0 1.25rem;
+    padding: var(--sheet-header-inset) var(--sheet-header-inset) 0 1.25rem;
   }
 
   .sheet-heading {

@@ -13,12 +13,13 @@ import { EASE_OUT, FADE_IN, FADE_OUT } from "./presence";
 /**
  * Where the icon picker and the emoji picker of an Option open (a lab choice, `icon-picker-place`):
  *
+ * - "Stacked sheet", what production ships: a second sheet over the form, which steps back, dims
+ *   and shows its top edge above the picker, as a sheet under a sheet does on iOS.
  * - "Inline": the picker unfolds under the button that opened it, and the rest of the form stays.
- * - "Stacked sheet": a second sheet over the form, which steps back a little, as on iOS.
  * - "Popover": a compact picker at the button.
  * - "Step": the picker replaces the form as a step of the sheet, and zooms out of the button.
  */
-export const PICKER_PLACES = ["Inline", "Stacked sheet", "Popover", "Step"] as const;
+export const PICKER_PLACES = ["Stacked sheet", "Inline", "Popover", "Step"] as const;
 export type PickerPlace = (typeof PICKER_PLACES)[number];
 
 export function usePickerPlace(): PickerPlace {
@@ -222,18 +223,6 @@ function unfold(reduceMotion: boolean) {
 }
 
 /**
- * The classes of a form's sheet while a stacked picker is open over it: it steps back (smaller,
- * dimmer, its top edge above the picker), as a sheet under a sheet does on iOS.
- */
-export const STACKED_UNDER_CLASS = [
-  "origin-top [transition-property:transform,translate,scale,filter,opacity]",
-  // A form shorter than the picker's sheet rises until its top edge shows above it.
-  "data-nested-drawer-open:translate-y-[calc(min(0px,var(--drawer-height)_-_var(--drawer-frontmost-height))_-_0.625rem)]",
-  "data-nested-drawer-open:scale-[0.94] data-nested-drawer-open:brightness-[0.9] dark:data-nested-drawer-open:brightness-[0.6]",
-  "data-nested-dialog-open:scale-[0.96] data-nested-dialog-open:brightness-[0.9] dark:data-nested-dialog-open:brightness-[0.6]",
-].join(" ");
-
-/**
  * The pickers that float over the form: a stacked sheet, or a popover at the button. Each keeps
  * its content while it animates out. For the other places it renders nothing.
  */
@@ -258,6 +247,7 @@ export function FloatingPicker({
           if (!isOpen) close();
         }}
         title={title}
+        nested
         className="sm:w-[min(25rem,100%)]"
       >
         {content === null ? null : render(content, "sheet")}
