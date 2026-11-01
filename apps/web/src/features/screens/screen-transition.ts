@@ -24,7 +24,8 @@ export const screenTransition: ViewTransitionOptions = {
 };
 
 function direction(from: string, to: string): "screen-push" | "screen-pop" | "screen-swap" {
-  const depth = (path: string) => (path === "/" ? 0 : 1);
+  // The tabs of the dock (the list, the settings) are the top level; a habit's page is under it.
+  const depth = (path: string) => (path.startsWith("/habits/") ? 1 : 0);
   if (depth(to) > depth(from)) return "screen-push";
   if (depth(to) < depth(from)) return "screen-pop";
   return "screen-swap";

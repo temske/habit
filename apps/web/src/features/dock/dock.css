@@ -1,0 +1,117 @@
+/*
+ * The dock (index.tsx): a pill of tabs and the "New habit" circle, over the bottom edge of a
+ * top-level screen. A band of the ground under them fades out upward, so the content scrolls under
+ * the dock but never shows behind it. The band lets taps through; only the controls take them.
+ */
+
+@layer components {
+  .dock {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    margin-top: auto;
+    padding: 1.5rem var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    background: linear-gradient(to bottom, transparent, var(--ground) 1.5rem);
+    pointer-events: none;
+  }
+
+  .dock > * {
+    pointer-events: auto;
+  }
+
+  .dock-pill {
+    display: flex;
+    gap: 0.25rem;
+    height: 3.5rem;
+    padding: 0.25rem;
+    background: var(--surface-2);
+    border-radius: 999px;
+    box-shadow: var(--elevation);
+  }
+
+  /* A tab: its icon and its name. The tab of the screen on show is raised inside the pill. */
+  .dock-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4375rem;
+    height: 3rem;
+    padding: 0 1.125rem 0 1rem;
+    color: var(--ink-3);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border-radius: 999px;
+    transition:
+      transform 120ms var(--ease-out),
+      background-color 120ms ease,
+      color 120ms ease;
+  }
+
+  .dock-tab svg {
+    font-size: 1.25rem;
+  }
+
+  .dock-tab[aria-current="page"] {
+    color: var(--ink);
+    background: var(--surface);
+    box-shadow:
+      0 0.0625rem 0.1875rem oklch(0 0 0 / 0.1),
+      0 0 0 0.0625rem oklch(0 0 0 / 0.03);
+  }
+
+  .dock-tab:active {
+    transform: scale(0.96);
+  }
+
+  /* "New habit": the one solid control on the ground. */
+  .dock-create {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    color: var(--ground);
+    font-size: 1.375rem;
+    background: var(--ink);
+    border-radius: 999px;
+    box-shadow: var(--elevation);
+    transition:
+      transform 120ms var(--ease-out),
+      background-color 120ms ease;
+  }
+
+  .dock-create:active {
+    transform: scale(0.94);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .dock-tab:not([aria-current="page"]):hover {
+      color: var(--ink);
+    }
+
+    .dock-create:hover {
+      background: color-mix(in oklch, var(--ink) 86%, var(--ground));
+    }
+  }
+
+  /* On black, the raised tab is a lighter grey, as the other raised surfaces are. */
+  @media (prefers-color-scheme: dark) {
+    .dock-tab[aria-current="page"] {
+      background: var(--surface-3);
+      box-shadow: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dock-tab:active,
+    .dock-create:active {
+      transform: none;
+    }
+  }
+}

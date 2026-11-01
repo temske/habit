@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ScreensRouteImport } from './routes/_screens'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ScreensIndexRouteImport } from './routes/_screens.index'
 import { Route as ScreensHabitsHabitIdRouteImport } from './routes/_screens.habits.$habitId'
 
 const ScreensRoute = ScreensRouteImport.update({
   id: '/_screens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScreensIndexRoute = ScreensIndexRouteImport.update({
@@ -30,28 +36,37 @@ const ScreensHabitsHabitIdRoute = ScreensHabitsHabitIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof ScreensIndexRoute
+  '/settings': typeof SettingsRoute
   '/habits/$habitId': typeof ScreensHabitsHabitIdRoute
 }
 export interface FileRoutesByTo {
+  '/settings': typeof SettingsRoute
   '/': typeof ScreensIndexRoute
   '/habits/$habitId': typeof ScreensHabitsHabitIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_screens': typeof ScreensRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/_screens/': typeof ScreensIndexRoute
   '/_screens/habits/$habitId': typeof ScreensHabitsHabitIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/habits/$habitId'
+  fullPaths: '/' | '/settings' | '/habits/$habitId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/habits/$habitId'
-  id: '__root__' | '/_screens' | '/_screens/' | '/_screens/habits/$habitId'
+  to: '/settings' | '/' | '/habits/$habitId'
+  id:
+    | '__root__'
+    | '/_screens'
+    | '/settings'
+    | '/_screens/'
+    | '/_screens/habits/$habitId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   ScreensRoute: typeof ScreensRouteWithChildren
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -61,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof ScreensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_screens/': {
@@ -95,6 +117,7 @@ const ScreensRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   ScreensRoute: ScreensRouteWithChildren,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

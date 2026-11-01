@@ -19,8 +19,8 @@ import "@/features/habit-page/habit-page.css";
 
 /**
  * The page of a habit (`/habits/$habitId`): the icon and the name, a grid of the last 12 months,
- * and a calendar with one Month per page, with Back and Edit in the dock at the bottom. A tap on a
- * Month in the grid moves the calendar there.
+ * and a calendar with one Month per page, with Back and Edit at the bottom. A tap on a Month in
+ * the grid moves the calendar there.
  */
 export function HabitPage({ habitId }: { habitId: HabitId }) {
   const habit = useHabit(habitId);
@@ -64,7 +64,7 @@ function HabitDetail({ habit }: { habit: Habit }) {
       <PageActions>
         <button
           type="button"
-          className="dock-button hp-edit"
+          className="hp-action hp-edit"
           onClick={() => openSheet({ edit: habit.id })}
         >
           <PencilSimpleIcon weight="bold" aria-hidden />
@@ -76,12 +76,10 @@ function HabitDetail({ habit }: { habit: Habit }) {
 }
 
 /**
- * The page's dock: one pill over its bottom edge, near the thumb, with back to the list, then the
- * page's own control. On a phone it takes the place of the list's dock: the pill stays where it is
- * and changes its shape while the screens slide under it (`.dock-pill` in styles.css). Back goes
- * back in the history when the app came from the list, so the list keeps its scroll; after a
- * reload or from a link, it goes to `/`. On a phone the page slides away to the right and uncovers
- * the list; on a desktop it slides away from beside the list.
+ * The page's buttons, side by side over its bottom edge, near the thumb: back to the list, then
+ * the page's own control. Back goes back in the history when the app came from the list, so the
+ * list keeps its scroll; after a reload or from a link, it goes to `/`. On a phone the page slides
+ * away to the right and uncovers the list; on a desktop it slides away from beside the list.
  */
 function PageActions({ children }: { children?: ReactNode }) {
   const canGoBack = useCanGoBack();
@@ -97,19 +95,17 @@ function PageActions({ children }: { children?: ReactNode }) {
     router.history.back();
   };
   return (
-    <nav className="dock hp-actions" aria-label="Habit">
-      <div className="dock-pill">
-        <Link
-          to="/"
-          className="dock-button hp-back"
-          aria-label="Back to habits"
-          viewTransition={screenTransition}
-          onClick={onBack}
-        >
-          <CaretLeftIcon weight="bold" />
-        </Link>
-        {children}
-      </div>
+    <nav className="hp-actions" aria-label="Habit">
+      <Link
+        to="/"
+        className="hp-action hp-back"
+        aria-label="Back to habits"
+        viewTransition={screenTransition}
+        onClick={onBack}
+      >
+        <CaretLeftIcon weight="bold" />
+      </Link>
+      {children}
     </nav>
   );
 }

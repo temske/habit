@@ -9,7 +9,7 @@
     --hp-icon: 1.75rem;
     max-width: 600px;
     margin: 0 auto;
-    /* Room under the calendar for the dock and the toast above it. */
+    /* Room under the calendar for the buttons and the toast above them. */
     padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
   }
 
@@ -18,31 +18,83 @@
     padding-bottom: 75dvh;
   }
 
-  /* ── The dock at the bottom (styles.css): back to the list, and Edit ── */
+  /* ── The buttons at the bottom ── */
 
-  /* Over the bottom edge of the window, in the page's column. */
+  /* Over the bottom edge of the page, near the thumb, on a band of the ground: the page scrolls
+     under it and fades out above it, so the buttons never sit on the tiles of the calendar. */
   .hp-actions {
     position: fixed;
     right: 0;
     bottom: 0;
     left: 0;
     z-index: 10;
+    display: flex;
+    gap: 0.5rem;
     max-width: 600px;
     margin: 0 auto;
+    padding: 0.5rem var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    background: var(--ground);
+  }
+
+  .hp-actions::before {
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    left: 0;
+    height: 1rem;
+    background: linear-gradient(to bottom, transparent, var(--ground));
+    pointer-events: none;
+    content: "";
+  }
+
+  /* The look of the list's "New habit" button. */
+  .hp-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 3rem;
+    background: var(--surface-2);
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border-radius: calc(0.75rem * var(--squircle-k));
+    corner-shape: squircle;
+    transition:
+      transform 120ms var(--ease-out),
+      background-color 120ms ease,
+      color 120ms ease;
   }
 
   .hp-back {
-    width: 3.5rem;
-    padding: 0;
+    flex: none;
+    width: 4.5rem;
     font-size: 1.25rem;
   }
 
   .hp-edit {
-    padding: 0 1.5rem 0 1.25rem;
+    flex: 1;
+    min-width: 0;
   }
 
   .hp-edit svg {
     font-size: 1.0625rem;
+  }
+
+  .hp-back:active {
+    transform: scale(0.96);
+  }
+
+  .hp-edit:active {
+    transform: scale(0.98);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hp-action:hover {
+      color: var(--ink);
+      background: var(--surface-3);
+    }
   }
 
   /* ── The title: the icon and the name ── */
@@ -738,6 +790,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .hp-day[data-pressed] .hp-day-press,
+    .hp-action:active,
     .hp-cal-today:active,
     .hp-cal-arrow:active:not(:disabled),
     .hp-cal-month:active,

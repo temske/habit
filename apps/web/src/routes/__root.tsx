@@ -5,12 +5,10 @@ import { AppToaster } from "@/components/toast";
 import { AuthGate } from "@/features/auth/auth-gate";
 import { EntryInputSheet } from "@/features/entry-input";
 import { HabitFormSheet } from "@/features/habit-form";
-import { SettingsSheet } from "@/features/settings";
 
 export const Route = createRootRoute({
-  // The sheets are search params on any route (`?new`, `?edit`, `?entry`, `?monthPicker`,
-  // `?settings`), so they open over the list and over the habit page, and the back gesture closes
-  // them.
+  // The sheets are search params on any route (`?new`, `?edit`, `?entry`, `?monthPicker`), so
+  // they open over the list and over the habit page, and the back gesture closes them.
   validateSearch: validateSheetSearch,
   component: Root,
 });
@@ -23,7 +21,6 @@ function Root() {
         <Outlet />
         <HabitFormSheet />
         <EntryInputSheet />
-        <SettingsSheet />
       </AuthGate>
       {/* Each screen has its dock at the bottom: the toasts show above it. */}
       <AppToaster lift="3.75rem" />
