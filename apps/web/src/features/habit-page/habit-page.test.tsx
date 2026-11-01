@@ -309,14 +309,14 @@ test.each([
   }
 });
 
-test("until the data comes, the page shows its shape and a way back", async () => {
-  // The owner is signed in, and neither the snapshot nor the live data is there yet. (While the
-  // sign-in loads, the app shows its own loading screen instead of the page.)
+test("until the data comes, the loading screen stays in place of the page", async () => {
+  // The owner is signed in, and neither the snapshot nor the live data is there yet. The app keeps
+  // its loading screen until the data is there, so the page never says "not here" too early.
   renderPage(demoHabitIds.water, (children) => <NoDataYet>{children}</NoDataYet>);
 
-  expect(await screen.findByLabelText("Loading the habit")).toBeTruthy();
-  expect(screen.getByRole("link", { name: "Back to habits" })).toBeTruthy();
+  expect((await screen.findByRole("status")).textContent).toBe("Loading");
   expect(screen.queryByRole("heading", { name: "This habit is not here" })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Water" })).toBeNull();
 });
 
 function NoDataYet({ children }: { children: ReactNode }) {

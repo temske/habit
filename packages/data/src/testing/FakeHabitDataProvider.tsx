@@ -8,7 +8,14 @@ import {
   type Day,
   type HabitState,
 } from "@habit/core";
-import { useCallback, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 
 import {
   HabitDataContext,
@@ -42,11 +49,17 @@ export function FakeHabitDataProvider(props: {
   latencyMs?: number;
   /** When true, every write fails after the delay, to see the error state. */
   failWrites?: boolean;
+  /**
+   * A cold start of the real provider without a snapshot, to see the loading states: the sign-in
+   * loads for half of this time, then the owner is signed in with no data yet (`source: "none"`)
+   * for the other half, then the live data comes. Default 0: ready at once.
+   */
+  startMs?: number;
   /** The Day of the live window and of the demo data. Default: today in the local time zone. */
   today?: Day;
   children: ReactNode;
 }): ReactNode {
-  const { auth = "ready", latencyMs = 0, failWrites = false, children } = props;
+  const { auth = "ready", latencyMs = 0, failWrites = false, startMs = 0, children } = props;
   const [day] = useState(() => props.today ?? todayOf());
   const [store] = useState(() => new FakeStore(props.initial ?? demoState(day)));
   const state = useSyncExternalStore(store.subscribe, store.getState);
@@ -59,7 +72,9 @@ export function FakeHabitDataProvider(props: {
     setStatusProp(auth);
     setStatus(auth);
   }
-  const authState = useMemo(() => authStateOf(status, setStatus), [status]);
+  const start = useColdStart(startMs);
+  const shownStatus = status === "ready" && start === "auth" ? "loading" : status;
+  const authState = useMemo(() => authStateOf(shownStatus, setStatus), [shownStatus]);
 
   const perform = useCallback(
     (action: Action) => store.perform(action, { latencyMs, failWrites }),
@@ -67,7 +82,7 @@ export function FakeHabitDataProvider(props: {
   );
 
   const api = useMemo<HabitDataApi>(() => {
-    const ready = status === "ready";
+    const ready = shownStatus === "ready" && start === "done";
     return {
       auth: authState,
       source: ready ? "live" : "none",
@@ -77,12 +92,27 @@ export function FakeHabitDataProvider(props: {
       monthStatus: alwaysReady,
       perform,
     };
-  }, [authState, status, state, day, perform]);
+  }, [authState, shownStatus, start, state, day, perform]);
 
   return <HabitDataContext.Provider value={api}>{children}</HabitDataContext.Provider>;
 }
 
 const EMPTY_STATE = emptyState();
+
+/** The phase of a cold start of `startMs`: the sign-in loads, then the data, then it is done. */
+function useColdStart(startMs: number): "auth" | "data" | "done" {
+  const [phase, setPhase] = useState<"auth" | "data" | "done">(startMs > 0 ? "auth" : "done");
+  useEffect(() => {
+    if (startMs <= 0) return;
+    const data = setTimeout(() => setPhase("data"), startMs / 2);
+    const done = setTimeout(() => setPhase("done"), startMs);
+    return () => {
+      clearTimeout(data);
+      clearTimeout(done);
+    };
+  }, [startMs]);
+  return phase;
+}
 
 /** All data is in memory, so each Month is loaded already. */
 function retainNothing(): () => void {

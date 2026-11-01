@@ -248,8 +248,12 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
-    /* An app, not a document: no pull-to-refresh and no rubber band of the whole page. */
-    overscroll-behavior: none;
+    /* The page keeps the native rubber band at its ends (iOS), so a fling eases out instead of
+       stopping dead. "contain" still turns off what "none" did: Chrome's pull-to-refresh, and the
+       swipe between pages on a trackpad. A sheet keeps its scroll to itself: its scroll areas
+       have "contain", and the bottom sheet (Base UI's Drawer) cancels a touch move that would
+       reach the page. */
+    overscroll-behavior: contain;
     caret-color: var(--ink);
   }
 
@@ -998,33 +1002,6 @@
     .new-habit:hover {
       color: var(--ink);
       background: var(--surface-3);
-    }
-  }
-
-  /* The skeleton waits 300ms before it shows, so a fast start never flashes it. */
-  .list-skeleton {
-    animation: skeleton-in 240ms var(--ease-out) 300ms both;
-  }
-
-  .skeleton-icon {
-    flex: none;
-    width: var(--icon);
-    height: var(--icon);
-    background: var(--surface-2);
-    border-radius: calc(var(--icon) * 0.18 * var(--squircle-k));
-    corner-shape: squircle;
-  }
-
-  .skeleton-name {
-    height: 0.75rem;
-    margin-left: 0.75rem;
-    background: var(--surface-2);
-    border-radius: 999px;
-  }
-
-  @keyframes skeleton-in {
-    from {
-      opacity: 0;
     }
   }
 

@@ -145,10 +145,6 @@
         white-space: nowrap;
       }
 
-      .screens[data-split] .skeleton-name {
-        display: none;
-      }
-
       .screens[data-split] .habit-row-inner:has(> [aria-current="page"])::before {
         inset: calc((var(--row) - 2.375rem) / 2) calc((var(--split-list) - 2.375rem) / 2);
       }

@@ -40,8 +40,14 @@ async function loadDataProvider(): Promise<DataProvider> {
   const initial = demoState(today());
   const latencyMs = Number(import.meta.env.VITE_HABIT_FAKE_LATENCY_MS ?? 0);
   const failWrites = import.meta.env.VITE_HABIT_FAKE_FAIL === "true";
+  const startMs = Number(import.meta.env.VITE_HABIT_FAKE_START_MS ?? 0);
   return ({ children }) => (
-    <FakeHabitDataProvider initial={initial} latencyMs={latencyMs} failWrites={failWrites}>
+    <FakeHabitDataProvider
+      initial={initial}
+      latencyMs={latencyMs}
+      failWrites={failWrites}
+      startMs={startMs}
+    >
       {children}
     </FakeHabitDataProvider>
   );
