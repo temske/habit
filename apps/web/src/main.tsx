@@ -1,10 +1,11 @@
 import { today } from "@habit/core";
 import { HabitDataProvider } from "@habit/data";
-import { RouterProvider } from "@tanstack/react-router";
+import { CatchBoundary, RouterProvider } from "@tanstack/react-router";
 import { lazy, StrictMode, Suspense, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { installCssSprings } from "@/components/motion";
+import { AppErrorScreen } from "@/features/app-error";
 import { createAppRouter } from "@/router";
 import { registerServiceWorker } from "@/service-worker";
 
@@ -75,13 +76,17 @@ if (container === null) throw new Error("root-missing");
 
 createRoot(container).render(
   <StrictMode>
-    <Data>
-      <RouterProvider router={router} />
-      {LabPanel === null ? null : (
-        <Suspense>
-          <LabPanel />
-        </Suspense>
-      )}
-    </Data>
+    {/* The router shows the same screen for an error in a route; this one catches the rest, such
+        as an error of the data provider. */}
+    <CatchBoundary getResetKey={() => 0} errorComponent={AppErrorScreen}>
+      <Data>
+        <RouterProvider router={router} />
+        {LabPanel === null ? null : (
+          <Suspense>
+            <LabPanel />
+          </Suspense>
+        )}
+      </Data>
+    </CatchBoundary>
   </StrictMode>,
 );

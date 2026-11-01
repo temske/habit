@@ -54,7 +54,7 @@ test("in a production build on the production instance, a browser tab offers Goo
   expect(screen.queryByRole("button", { name: "Sign in with an email code" })).toBeNull();
 });
 
-test("in a production build on the production instance, the installed app also offers the email code, without the test users", async () => {
+test("in a production build on the production instance, the installed app offers the email code alone, without the test users", async () => {
   vi.stubEnv("DEV", false);
   vi.stubEnv("VITE_CLERK_PUBLISHABLE_KEY", "pk_live_Y2xlcmsuaGFiaXQudGVtLnNoJA");
   const matchMedia = window.matchMedia;
@@ -69,6 +69,8 @@ test("in a production build on the production instance, the installed app also o
     fireEvent.click(await screen.findByRole("button", { name: "Sign in with an email code" }));
     expect(screen.getByLabelText("Email")).toBeTruthy();
     expect(screen.queryByText(/Development only/)).toBeNull();
+    // Google's page is on another origin: in the installed app it would open with browser bars.
+    expect(screen.queryByRole("button", { name: "Continue with Google" })).toBeNull();
   } finally {
     window.matchMedia = matchMedia;
   }

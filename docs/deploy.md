@@ -93,6 +93,10 @@ These settings are in the Vercel project, not in a file:
   vercel env update VITE_CONVEX_URL preview
   ```
 
+  Vercel also gives the build its system variables with the `VITE_` prefix
+  (`VITE_VERCEL_GIT_COMMIT_SHA` and others). `apps/web/vite.config.ts` removes them, so a deploy of
+  the same code makes the same files (`docs/notes/pwa.md`).
+
 ## DNS
 
 Porkbun has the DNS of `tem.sh`. The apex is on Netlify. Do not change it. `habit.tem.sh` needs
