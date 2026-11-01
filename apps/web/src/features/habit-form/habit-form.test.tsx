@@ -169,15 +169,32 @@ describe("create", () => {
     expect(app.named("Walk")!.order > last.order).toBe(true);
   });
 
-  test("the button under the icon picker goes back to the form, which keeps the name", async () => {
+  test("the icon picker unfolds in the form, and a pick folds it and keeps the name", async () => {
     const app = renderApp("/?new=true");
     const dialog = await startNew("Stretch");
-    fireEvent.click(within(dialog).getByRole("button", { name: "Change icon" }));
-    fireEvent.click(await within(dialog).findByRole("button", { name: "Back" }));
-    await within(dialog).findByRole("button", { name: "Change icon" });
+    const tile = within(dialog).getByRole("button", { name: "Change icon" });
+    fireEvent.click(tile);
+    // The form stays while the picker is open.
+    type(await within(dialog).findByRole("searchbox"), "run");
+    expect(within(dialog).getByRole("textbox", { name: "Name" })).toHaveProperty(
+      "value",
+      "Stretch",
+    );
 
+    fireEvent.click(await within(dialog).findByRole("button", { name: "🏃" }));
+    await waitFor(() => expect(within(dialog).queryByRole("searchbox")).toBeNull());
     fireEvent.click(within(dialog).getByRole("button", { name: "Add habit" }));
-    expect(app.named("Stretch")).toBeDefined();
+    expect(app.named("Stretch")?.icon).toEqual({ type: "emoji", emoji: "🏃" });
+  });
+
+  test("a second tap on the icon folds the picker away without a change", async () => {
+    renderApp("/?new=true");
+    const dialog = await startNew("Stretch");
+    const tile = within(dialog).getByRole("button", { name: "Change icon" });
+    fireEvent.click(tile);
+    await within(dialog).findByRole("searchbox");
+    fireEvent.click(tile);
+    await waitFor(() => expect(within(dialog).queryByRole("searchbox")).toBeNull());
   });
 });
 

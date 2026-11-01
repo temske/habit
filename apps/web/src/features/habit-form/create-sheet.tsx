@@ -13,6 +13,7 @@ import { useAct } from "@/components/act";
 import { haptic } from "@/components/haptics";
 import { ResponsiveSheet } from "@/components/sheet";
 import { useIsWide } from "@/components/use-media-query";
+import { cn } from "@/lib/utils";
 
 import { ColorSwatches, FORM_SHEET_CLASS, FormColumns, StepButton } from "./controls";
 import {
@@ -31,21 +32,28 @@ import {
   type FormState,
 } from "./draft";
 import { DirectionField, IconTile, KindField, KINDS, NameFields, NumberFields } from "./fields";
-import { IconPicker, OptionEmojiPicker } from "./icon-picker";
 import { suggestIcon } from "./icon-search";
 import { OptionsEditor } from "./options-editor";
+import {
+  FloatingPicker,
+  InlinePicker,
+  PickerFor,
+  STACKED_UNDER_CLASS,
+  triggerSelector,
+  usePicker,
+  zoomVariants,
+  type PickerFormProps,
+} from "./picker-place";
 import { stepVariants, Steps } from "./steps";
 
 const NO_STORED_OPTIONS: ReadonlySet<OptionId> = new Set();
-
-const ICON_TILE = 'button[aria-label="Change icon"]';
 
 /**
  * The create sheet (`?new=true`). One step: the icon and the name, the description, the color, the
  * Direction and the Kind, and under them the fields of a number, a choice or a scale habit (in two
  * columns where the window has room: see FormColumns). The icon picker and the emoji picker of an
- * Option are steps of their own, and come back to the form. "Add habit" creates the habit after
- * the last one and closes the sheet.
+ * Option unfold under their button (or open where the lab's `icon-picker-place` puts them), and
+ * a pick folds them away. "Add habit" creates the habit after the last one and closes the sheet.
  */
 export function CreateHabitSheet({
   open,
@@ -66,14 +74,19 @@ export function CreateHabitSheet({
   const [iconPicked, setIconPicked] = useState(false);
   // The tile's tint rises once, when the sheet opens, not each time the form comes back.
   const [leftForm, setLeftForm] = useState(false);
-  const [step, setStep] = useState<"form" | "icon" | "emoji">("form");
   // The side the last Kind lies on from the one before it: its fields come in from that side.
   const [kindDirection, setKindDirection] = useState<1 | -1>(1);
-  const [emojiFor, setEmojiFor] = useState<OptionId | null>(null);
   const [attempted, setAttempted] = useState(false);
   const [touched, setTouched] = useState({ target: false, step: false });
   const nameRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const picker = usePicker(rootRef);
+  // The picker is a step of the sheet only in the lab's "Step" place.
+  const step = picker.place === "Step" && picker.target !== null ? picker.target.type : "form";
+  // The button that opened the last picker, for the focus and the zoom on the way back.
+  const [lastTarget, setLastTarget] = useState(picker.target);
+  if (picker.target !== null && picker.target !== lastTarget) setLastTarget(picker.target);
 
   const draft = draftOf({ ...form, options: savedOptions(form.options, NO_STORED_OPTIONS) });
   const issues = validateHabitDraft(draft);
@@ -118,20 +131,23 @@ export function CreateHabitSheet({
       icon: iconPicked ? current.icon : (suggestIcon(name) ?? DEFAULT_ICON),
     }));
 
-  const onPick = (icon: HabitIconValue) => {
-    setForm((current) => ({ ...current, icon }));
-    setIconPicked(true);
-    setStep("form");
-  };
-
-  const onPickEmoji = (emoji: string | undefined) => {
-    if (emojiFor !== null) {
+  const pickerForm: PickerFormProps = {
+    icon: form.icon,
+    color: form.color,
+    options: form.options,
+    autoFocus: wide,
+    onPickIcon: (icon: HabitIconValue) => {
+      setForm((current) => ({ ...current, icon }));
+      setIconPicked(true);
+      picker.close();
+    },
+    onPickEmoji: (id, emoji) => {
       setForm((current) => ({
         ...current,
-        options: updateOption(current.options, emojiFor, { emoji }),
+        options: updateOption(current.options, id, { emoji }),
       }));
-    }
-    setStep("form");
+      picker.close();
+    },
   };
 
   const kindFields =
@@ -160,9 +176,18 @@ export function CreateHabitSheet({
         }
         onPickEmoji={(id) => {
           setLeftForm(true);
-          setEmojiFor(id);
-          setStep("emoji");
+          picker.open({ type: "emoji", id });
         }}
+        {...(picker.place === "Inline"
+          ? {
+              emojiOpenFor: picker.target?.type === "emoji" ? picker.target.id : null,
+              renderEmojiPicker: (id: OptionId) => (
+                <InlinePicker open={picker.unfolded({ type: "emoji", id })} onClose={picker.close}>
+                  <PickerFor target={{ type: "emoji", id }} size="inline" form={pickerForm} />
+                </InlinePicker>
+              ),
+            }
+          : {})}
         onAdd={() => {
           const options = addOption(form.options);
           setForm((current) => ({ ...current, options }));
@@ -206,112 +231,126 @@ export function CreateHabitSheet({
               ? "Your first habit"
               : "New habit"
       }
-      className={FORM_SHEET_CLASS}
+      className={cn(FORM_SHEET_CLASS, picker.place === "Stacked sheet" && STACKED_UNDER_CLASS)}
       {...(wide ? { initialFocus: nameRef } : {})}
       footer={
         step === "form" ? (
           <StepButton label="Add habit" variant="primary" direction={-1} onClick={create} />
         ) : (
-          <StepButton label="Back" variant="quiet" direction={1} onClick={() => setStep("form")} />
+          <StepButton label="Back" variant="quiet" direction={1} onClick={picker.close} />
         )
       }
     >
-      <Steps
-        step={step}
-        direction={step === "form" ? -1 : 1}
-        focus={
-          step !== "form"
-            ? undefined
-            : emojiFor === null
-              ? ICON_TILE
-              : `button[data-option-emoji="${emojiFor}"]`
-        }
-      >
-        {step === "form" ? (
-          <div ref={formRef}>
-            <FormColumns
-              looks={
-                <>
-                  <NameFields
-                    icon={
-                      <IconTile
-                        icon={form.icon}
-                        color={form.color}
-                        onClick={() => {
-                          setLeftForm(true);
-                          setEmojiFor(null);
-                          setStep("icon");
-                        }}
-                        fillOnMount={!leftForm}
-                      />
-                    }
-                    name={form.name}
-                    description={form.description}
-                    onName={onName}
-                    onDescription={(description) =>
-                      setForm((current) => ({ ...current, description }))
-                    }
-                    onEnter={onEnter}
-                    message={attempted || nameIssue?.code === "tooLong" ? messages.name : undefined}
-                    nameRef={nameRef}
-                  />
-                  <ColorSwatches
-                    value={form.color}
-                    onChange={(color) => setForm((current) => ({ ...current, color }))}
-                  />
-                </>
-              }
-              tracking={
-                <>
-                  <DirectionField
-                    value={form.direction}
-                    onChange={(value) => setForm((current) => ({ ...current, direction: value }))}
-                  />
-                  <KindField
-                    value={form.kind}
-                    onChange={(kind) => {
-                      setKindDirection(KINDS.indexOf(kind) > KINDS.indexOf(form.kind) ? 1 : -1);
-                      setForm((current) => withKind(current, kind));
-                    }}
-                  />
-                  {/* A swipe, as between the steps: the new fields come in from the side of their
+      <div ref={rootRef}>
+        <Steps
+          step={step}
+          direction={step === "form" ? -1 : 1}
+          focus={step !== "form" || lastTarget === null ? undefined : triggerSelector(lastTarget)}
+          variants={
+            picker.place === "Step"
+              ? zoomVariants(reduceMotion, lastTarget?.type === "emoji" ? "0% 50%" : "0% 0%")
+              : undefined
+          }
+        >
+          {step === "form" ? (
+            <div ref={formRef}>
+              <FormColumns
+                looks={
+                  <>
+                    <NameFields
+                      icon={
+                        <IconTile
+                          icon={form.icon}
+                          color={form.color}
+                          onClick={() => {
+                            setLeftForm(true);
+                            picker.open({ type: "icon" });
+                          }}
+                          fillOnMount={!leftForm}
+                          expanded={
+                            picker.place === "Inline"
+                              ? picker.unfolded({ type: "icon" })
+                              : undefined
+                          }
+                        />
+                      }
+                      picker={
+                        picker.place === "Inline" ? (
+                          <InlinePicker
+                            open={picker.unfolded({ type: "icon" })}
+                            onClose={picker.close}
+                          >
+                            <PickerFor target={{ type: "icon" }} size="inline" form={pickerForm} />
+                          </InlinePicker>
+                        ) : undefined
+                      }
+                      name={form.name}
+                      description={form.description}
+                      onName={onName}
+                      onDescription={(description) =>
+                        setForm((current) => ({ ...current, description }))
+                      }
+                      onEnter={onEnter}
+                      message={
+                        attempted || nameIssue?.code === "tooLong" ? messages.name : undefined
+                      }
+                      nameRef={nameRef}
+                    />
+                    <ColorSwatches
+                      value={form.color}
+                      onChange={(color) => setForm((current) => ({ ...current, color }))}
+                    />
+                  </>
+                }
+                tracking={
+                  <>
+                    <DirectionField
+                      value={form.direction}
+                      onChange={(value) => setForm((current) => ({ ...current, direction: value }))}
+                    />
+                    <KindField
+                      value={form.kind}
+                      onChange={(kind) => {
+                        setKindDirection(KINDS.indexOf(kind) > KINDS.indexOf(form.kind) ? 1 : -1);
+                        setForm((current) => withKind(current, kind));
+                      }}
+                    />
+                    {/* A swipe, as between the steps: the new fields come in from the side of their
                       Kind and the old ones leave to the other side. */}
-                  <AnimatePresence initial={false} mode="popLayout" custom={kindDirection}>
-                    {kindFields === null ? null : (
-                      <motion.div
-                        key={kindFieldsKey}
-                        data-kind-fields={kindFieldsKey}
-                        custom={kindDirection}
-                        variants={stepVariants(reduceMotion)}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                      >
-                        {kindFields}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </>
-              }
-            />
-          </div>
-        ) : (
-          // The picker runs down to the footer, so its grid is cut at the top edge of the button:
-          // this takes back the body's bottom padding.
-          <div className="-mb-5">
-            {step === "emoji" ? (
-              <OptionEmojiPicker
-                emoji={form.options.find((option) => option.id === emojiFor)?.emoji}
-                color={form.color}
-                onPick={onPickEmoji}
-                autoFocus={wide}
+                    <AnimatePresence initial={false} mode="popLayout" custom={kindDirection}>
+                      {kindFields === null ? null : (
+                        <motion.div
+                          key={kindFieldsKey}
+                          data-kind-fields={kindFieldsKey}
+                          custom={kindDirection}
+                          variants={stepVariants(reduceMotion)}
+                          initial="enter"
+                          animate="center"
+                          exit="exit"
+                        >
+                          {kindFields}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
+                }
               />
-            ) : (
-              <IconPicker value={form.icon} color={form.color} onPick={onPick} autoFocus={wide} />
-            )}
-          </div>
-        )}
-      </Steps>
+            </div>
+          ) : (
+            // The picker runs down to the footer, so its grid is cut at the top edge of the button:
+            // this takes back the body's bottom padding.
+            <div className="-mb-5">
+              {picker.target === null ? null : (
+                <PickerFor target={picker.target} size="step" form={pickerForm} />
+              )}
+            </div>
+          )}
+        </Steps>
+      </div>
+      <FloatingPicker
+        picker={picker}
+        render={(target, size) => <PickerFor target={target} size={size} form={pickerForm} />}
+      />
     </ResponsiveSheet>
   );
 }

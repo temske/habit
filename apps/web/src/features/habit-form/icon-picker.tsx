@@ -11,6 +11,20 @@ import { cn } from "@/lib/utils";
 import { fieldClass, Segmented, SectionLabel } from "./controls";
 import { firstEmoji, HABIT_EMOJI, searchEmoji, searchIcons } from "./icon-search";
 
+/**
+ * Where a picker is, which sets the height of its grid: a step of the sheet, a fold of the form, a
+ * sheet of its own, or a popover. The fold and the popover are narrow, so their search and tabs
+ * never share a row.
+ */
+export type PickerSize = "step" | "inline" | "sheet" | "popover";
+
+const GRID_HEIGHT: Record<PickerSize, string> = {
+  step: "h-[min(21rem,46dvh)]",
+  inline: "h-[min(14.5rem,34dvh)]",
+  sheet: "h-[min(24rem,52dvh)]",
+  popover: "h-[min(15rem,38dvh)]",
+};
+
 const ALL_ICONS: HabitIconValue[] = PHOSPHOR_ICON_GROUPS.flatMap((group) =>
   group.names.map((name) => ({ type: "phosphor" as const, name })),
 );
@@ -27,6 +41,7 @@ export function IconPicker({
   onClear,
   autoFocus,
   emojiOnly = false,
+  size = "step",
 }: {
   value: HabitIconValue | undefined;
   color: HabitColor;
@@ -36,7 +51,9 @@ export function IconPicker({
   /** Focus the search field: on a desktop, where no keyboard covers the grid. */
   autoFocus: boolean;
   emojiOnly?: boolean;
+  size?: PickerSize;
 }) {
+  const wideRow = size === "step" || size === "sheet";
   const [query, setQuery] = useState("");
   const [pickedTab, setTab] = useState<"icons" | "emoji">(
     value?.type === "phosphor" ? "icons" : "emoji",
@@ -60,8 +77,13 @@ export function IconPicker({
   return (
     <div className="flex flex-col gap-3" style={habitColorStyle(color)}>
       {/* In the two columns of a wide form, the search and the tabs share a row. */}
-      <div className="flex flex-col gap-3 min-[60rem]:flex-row min-[60rem]:items-center">
-        <div className="relative min-[60rem]:flex-1">
+      <div
+        className={cn(
+          "flex flex-col gap-3",
+          wideRow && "min-[60rem]:flex-row min-[60rem]:items-center",
+        )}
+      >
+        <div className={cn("relative", wideRow && "min-[60rem]:flex-1")}>
           <MagnifyingGlassIcon
             aria-hidden
             className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 size-[1.125rem] text-ink-3"
@@ -118,7 +140,7 @@ export function IconPicker({
               { value: "icons", label: "Icons" },
               { value: "emoji", label: "Emoji" },
             ]}
-            className="min-[60rem]:w-64"
+            className={wideRow ? "min-[60rem]:w-64" : undefined}
           />
         ) : null}
       </div>
@@ -126,7 +148,7 @@ export function IconPicker({
       {/* The sheets put the button right under the grid, so the grid is cut at the button's top
           edge; the space at the end of the scroll keeps the last row off the button. */}
       <div
-        className="-mx-1 h-[min(21rem,46dvh)] overflow-y-auto overscroll-contain px-1 pb-4"
+        className={cn("-mx-1 overflow-y-auto overscroll-contain px-1 pb-4", GRID_HEIGHT[size])}
         onKeyDown={moveFocusInGrid}
       >
         {trimmed !== "" ? (
@@ -337,11 +359,13 @@ export function OptionEmojiPicker({
   color,
   onPick,
   autoFocus,
+  size,
 }: {
   emoji: string | undefined;
   color: HabitColor;
   onPick: (emoji: string | undefined) => void;
   autoFocus: boolean;
+  size?: PickerSize;
 }) {
   return (
     <IconPicker
@@ -351,6 +375,7 @@ export function OptionEmojiPicker({
       onPick={(icon) => onPick(icon.type === "emoji" ? icon.emoji : undefined)}
       onClear={() => onPick(undefined)}
       autoFocus={autoFocus}
+      {...(size === undefined ? {} : { size })}
     />
   );
 }

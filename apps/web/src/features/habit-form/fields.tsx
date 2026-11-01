@@ -38,10 +38,13 @@ export function IconTile({
   color,
   onClick,
   fillOnMount = false,
+  expanded,
 }: {
   icon: HabitIconValue;
   color: HabitColor;
   onClick: () => void;
+  /** The picker unfolded under the tile is open: a ring in the habit color, as a chosen swatch. */
+  expanded?: boolean;
   /** Let the tint rise when the tile appears: the welcome of a new habit. */
   fillOnMount?: boolean;
 }) {
@@ -62,7 +65,9 @@ export function IconTile({
       type="button"
       onClick={onClick}
       aria-label="Change icon"
-      className="relative isolate grid size-[3.25rem] flex-none place-items-center overflow-hidden squircle-[0.625rem] transition-[scale] duration-150 ease-out active:scale-[0.95]"
+      aria-expanded={expanded}
+      style={habitColorStyle(color)}
+      className="relative isolate grid size-[3.25rem] flex-none place-items-center overflow-hidden squircle-[0.625rem] shadow-[0_0_0_0_color-mix(in_oklab,var(--c)_50%,transparent)] transition-[scale,box-shadow] duration-150 ease-out active:scale-[0.95] aria-expanded:shadow-[0_0_0_0.25rem_color-mix(in_oklab,var(--c)_50%,transparent)]"
     >
       <TileFill color={color} fillOnMount={fillOnMount} onRise={pulse} />
       <AnimatePresence initial={false} mode="popLayout">
@@ -181,9 +186,12 @@ export function NameFields({
   onEnter,
   message,
   nameRef,
+  picker,
 }: {
   /** The IconTile, before the name. */
   icon: ReactNode;
+  /** A picker that unfolds under the name, before the description. */
+  picker?: ReactNode;
   name: string;
   description: string;
   onName: (name: string) => void;
@@ -198,34 +206,37 @@ export function NameFields({
   const messageId = useId();
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-start gap-2">
-        {icon}
-        <div className="min-w-0 flex-1">
-          <input
-            ref={nameRef}
-            value={name}
-            onChange={(event) => onName(event.target.value)}
-            onBlur={onBlurName}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && onEnter !== undefined) {
-                event.preventDefault();
-                onEnter();
-              }
-            }}
-            aria-label="Name"
-            placeholder="Name"
-            autoComplete="off"
-            autoCapitalize="sentences"
-            enterKeyHint={onEnter === undefined ? "done" : "next"}
-            aria-invalid={message === undefined ? undefined : true}
-            aria-describedby={message === undefined ? undefined : messageId}
-            className={cn(
-              fieldClass,
-              "h-[3.25rem] text-[1.0625rem] font-semibold tracking-[-0.01em]",
-            )}
-          />
-          <FieldMessage id={messageId} message={message} />
+      <div>
+        <div className="flex items-start gap-2">
+          {icon}
+          <div className="min-w-0 flex-1">
+            <input
+              ref={nameRef}
+              value={name}
+              onChange={(event) => onName(event.target.value)}
+              onBlur={onBlurName}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && onEnter !== undefined) {
+                  event.preventDefault();
+                  onEnter();
+                }
+              }}
+              aria-label="Name"
+              placeholder="Name"
+              autoComplete="off"
+              autoCapitalize="sentences"
+              enterKeyHint={onEnter === undefined ? "done" : "next"}
+              aria-invalid={message === undefined ? undefined : true}
+              aria-describedby={message === undefined ? undefined : messageId}
+              className={cn(
+                fieldClass,
+                "h-[3.25rem] text-[1.0625rem] font-semibold tracking-[-0.01em]",
+              )}
+            />
+            <FieldMessage id={messageId} message={message} />
+          </div>
         </div>
+        {picker}
       </div>
       <input
         value={description}
