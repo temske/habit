@@ -16,6 +16,8 @@ export const Route = createRootRoute({
 function Root() {
   return (
     <>
+      {/* What iOS finds at the top edge of every screen (styles.css, `.page-edge`). */}
+      <div className="page-edge" aria-hidden />
       {/* Only the owner gets the screens; the other states of the sign-in get their own. */}
       <AuthGate>
         <Outlet />
