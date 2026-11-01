@@ -148,10 +148,7 @@ export function OptionsEditor(props: OptionsEditorProps) {
   return (
     <div>
       <SectionLabel id={labelId}>
-        <RollingText
-          text={kind === "scale" ? "Options, from the lightest to the fullest" : "Options"}
-          reduceMotion={reduceMotion}
-        />
+        <OptionsLabel scale={kind === "scale"} reduceMotion={reduceMotion} />
       </SectionLabel>
       {touch === "Gestures, with a hint" ? (
         <p className="-mt-1 mb-2 hidden text-[0.875rem] leading-5 text-ink-3 pointer-coarse:block">
@@ -221,7 +218,7 @@ export function OptionsEditor(props: OptionsEditorProps) {
         <button
           type="button"
           onClick={add}
-          className="flex h-11 w-full items-center gap-2 rounded-full px-4 text-[1rem] font-medium text-ink-2 transition-[background-color,scale] duration-150 ease-out hover:bg-surface-2 active:scale-[0.98]"
+          className="flex h-11 w-full items-center gap-2 squircle-[0.875rem] px-4 text-[1rem] font-medium text-ink-2 transition-[background-color,scale] duration-150 ease-out hover:bg-surface-2 active:scale-[0.98]"
         >
           <PlusIcon weight="bold" aria-hidden className="size-4" />
           Add option
@@ -325,7 +322,23 @@ function OptionRow({
         style={{ transform: CSS.Translate.toString(transform), transition }}
         className={cn("relative pb-2", isDragging && "z-10")}
       >
-        <motion.div ref={swipe.container} style={{ overflow }} className="relative rounded-full">
+        <motion.div
+          ref={swipe.container}
+          style={{ overflow }}
+          className={cn(
+            "relative squircle-[0.875rem] transition-[scale] duration-150 ease-out",
+            isDragging && "scale-[1.02]",
+          )}
+        >
+          {/* Lifted for a move: the row rises onto a card of the surface, a little larger than the
+              row, as a habit row of the list does. */}
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute -inset-1.5 squircle-[1.25rem] bg-surface opacity-0 shadow-[var(--elevation)] transition-opacity duration-150 ease-out dark:bg-surface-2",
+              isDragging && "opacity-100",
+            )}
+          />
           {gestures && canRemove ? (
             <SwipeAction x={swipe.x} onRemove={() => onRemove(option.id)} />
           ) : null}
@@ -333,9 +346,9 @@ function OptionRow({
             style={{ x: swipe.x }}
             {...swipe.handlers}
             className={cn(
-              "relative flex items-center gap-2 rounded-full bg-surface transition-[box-shadow] duration-150",
+              "relative flex items-center gap-2 squircle-[0.875rem] bg-surface",
               gestures && "touch-pan-y",
-              isDragging && "shadow-[var(--elevation)]",
+              isDragging && "bg-transparent",
             )}
           >
             <div
@@ -478,44 +491,33 @@ function ScaleLevel({
   );
 }
 
-/** A label that rolls to its new text, as the footer button does: the old one leaves upward. */
-function RollingText({ text, reduceMotion }: { text: string; reduceMotion: boolean }) {
+/**
+ * "Options", and for a scale ", from the lightest to the fullest" after it. Both Kinds share the
+ * first word, so it stays still and only the rest fades in and out beside it, on the same line.
+ */
+function OptionsLabel({ scale, reduceMotion }: { scale: boolean; reduceMotion: boolean }) {
   return (
-    <span className="relative block overflow-hidden">
-      <AnimatePresence initial={false} mode="popLayout">
-        <motion.span
-          key={text}
-          className="block"
-          initial={
-            reduceMotion
-              ? { opacity: 0 }
-              : { opacity: 0, transform: "translateY(0.5rem)", filter: "blur(2px)" }
-          }
-          animate={{
-            opacity: 1,
-            transform: "translateY(0rem)",
-            filter: "blur(0px)",
-            transition: reduceMotion
-              ? FADE_IN
-              : {
-                  transform: springs.morph,
-                  opacity: { duration: 0.22, ease: EASE_OUT },
-                  filter: { duration: 0.22, ease: EASE_OUT },
-                },
-          }}
-          exit={
-            reduceMotion
-              ? { opacity: 0, transition: FADE_OUT }
-              : {
-                  opacity: 0,
-                  transform: "translateY(-0.5rem)",
-                  filter: "blur(2px)",
-                  transition: { duration: 0.14, ease: EASE_OUT },
-                }
-          }
-        >
-          {text}
-        </motion.span>
+    <span>
+      Options
+      <AnimatePresence initial={false}>
+        {scale ? (
+          <motion.span
+            key="scale"
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, filter: "blur(2px)" }}
+            animate={{
+              opacity: 1,
+              filter: "blur(0px)",
+              transition: reduceMotion ? FADE_IN : { duration: 0.22, ease: EASE_OUT },
+            }}
+            exit={{
+              opacity: 0,
+              filter: reduceMotion ? "blur(0px)" : "blur(2px)",
+              transition: FADE_OUT,
+            }}
+          >
+            , from the lightest to the fullest
+          </motion.span>
+        ) : null}
       </AnimatePresence>
     </span>
   );
@@ -552,7 +554,7 @@ function EmojiButton({
       aria-label={emoji === undefined ? `Emoji for ${label}` : `Emoji for ${label}: ${emoji}`}
       aria-expanded={expanded}
       style={habitColorStyle(color)}
-      className="grid size-12 flex-none place-items-center rounded-full bg-field text-[1.0625rem] outline-none transition-[box-shadow,scale] duration-150 ease-out active:scale-[0.95] focus-visible:shadow-[inset_0_0_0_0.09375rem_var(--ink-4)] aria-expanded:shadow-[0_0_0_0.25rem_color-mix(in_oklab,var(--c)_50%,transparent)]"
+      className="grid size-12 flex-none place-items-center squircle-[0.875rem] bg-field text-[1.0625rem] outline-none transition-[box-shadow,scale] duration-150 ease-out active:scale-[0.95] focus-visible:shadow-[inset_0_0_0_0.09375rem_var(--ink-4)] aria-expanded:shadow-[0_0_0_0.25rem_color-mix(in_oklab,var(--c)_50%,transparent)]"
     >
       {emoji ?? <SmileyIcon aria-hidden className="size-5 text-ink-3" />}
     </button>
@@ -570,7 +572,7 @@ function SwipeAction({ x, onRemove }: { x: MotionValue<number>; onRemove: () => 
     <motion.div
       aria-hidden
       style={{ opacity }}
-      className="absolute inset-0 flex justify-end rounded-full bg-[color-mix(in_oklab,var(--destructive)_12%,var(--surface))]"
+      className="absolute inset-0 flex justify-end squircle-[0.875rem] bg-[color-mix(in_oklab,var(--destructive)_12%,var(--surface))]"
     >
       <motion.button
         type="button"
@@ -620,7 +622,7 @@ function RetiredOptions({
                   onClick={() => onRestore(option.id)}
                   disabled={!canRestore}
                   aria-label={`Restore ${option.label}`}
-                  className="flex h-9 flex-none items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-[0.9375rem] font-medium text-ink-2 transition-[color,scale,opacity] duration-150 ease-out hover:text-ink active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100"
+                  className="flex h-9 flex-none items-center gap-1.5 squircle-[0.625rem] bg-surface-2 px-3.5 text-[0.9375rem] font-medium text-ink-2 transition-[color,scale,opacity] duration-150 ease-out hover:text-ink active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100"
                 >
                   <ArrowCounterClockwiseIcon weight="bold" aria-hidden />
                   Restore

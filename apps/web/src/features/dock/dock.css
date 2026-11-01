@@ -23,7 +23,8 @@
     gap: 0.5rem;
     max-width: 600px;
     margin: 0 auto;
-    padding: 1.5rem var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    /* Low, as the tab bar of iOS 26: into the safe area, 0.75rem clear of the home indicator. */
+    padding: 1.5rem var(--gutter) max(0.75rem, env(safe-area-inset-bottom, 0px) - 0.75rem);
     background: linear-gradient(to bottom, transparent, var(--ground) 1.5rem);
     pointer-events: none;
   }
@@ -31,7 +32,7 @@
   /* The room the fixed dock covers, at the end of the screen. */
   .dock-room {
     flex: none;
-    height: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+    height: calc(5rem + max(0.75rem, env(safe-area-inset-bottom, 0px) - 0.75rem));
     margin-top: auto;
   }
 
