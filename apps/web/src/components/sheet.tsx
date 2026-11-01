@@ -113,25 +113,25 @@ function BottomSheet({
               {...(initialFocus === undefined ? {} : { initialFocus })}
             >
               <div className="sheet-handle" aria-hidden />
-              {/* The handle and the header stay at the top, and the footer at the bottom: only
-                  the body between them scrolls. */}
+              {/* The footer stays at the bottom, and the body scrolls above it. The header sticks
+                  to the top of the scroll, and the body passes under its fade. */}
               <Drawer.Content className="sheet-content">
-                <SheetHeader
-                  title={<Drawer.Title className={titleClass(hideTitle)}>{title}</Drawer.Title>}
-                  description={
-                    description === undefined ? null : (
-                      <Drawer.Description className="sheet-description">
-                        {description}
-                      </Drawer.Description>
-                    )
-                  }
-                  close={
-                    <Drawer.Close className="sheet-close" aria-label="Close">
-                      <XIcon weight="bold" />
-                    </Drawer.Close>
-                  }
-                />
                 <div className="sheet-scroll">
+                  <SheetHeader
+                    title={<Drawer.Title className={titleClass(hideTitle)}>{title}</Drawer.Title>}
+                    description={
+                      description === undefined ? null : (
+                        <Drawer.Description className="sheet-description">
+                          {description}
+                        </Drawer.Description>
+                      )
+                    }
+                    close={
+                      <Drawer.Close className="sheet-close" aria-label="Close">
+                        <XIcon weight="bold" />
+                      </Drawer.Close>
+                    }
+                  />
                   <MorphHeight>
                     <div className="sheet-body">{children}</div>
                   </MorphHeight>

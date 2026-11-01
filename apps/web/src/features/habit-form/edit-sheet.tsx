@@ -213,7 +213,7 @@ export function EditHabitSheet({
                 <PickerFor target={picker.target} size="step" form={pickerForm} />
               )}
               <StickyFooter>
-                <SheetButton variant="quiet" onClick={picker.close} className="w-full">
+                <SheetButton variant="quiet" size="large" onClick={picker.close} className="w-full">
                   Back
                 </SheetButton>
               </StickyFooter>
@@ -368,7 +368,12 @@ export function EditHabitSheet({
                 }
               />
               <div className="pt-2">
-                <SheetButton variant="destructive" onClick={onDelete} className="w-full">
+                <SheetButton
+                  variant="destructive"
+                  size="large"
+                  onClick={onDelete}
+                  className="w-full"
+                >
                   <TrashIcon weight="bold" aria-hidden />
                   Delete habit
                 </SheetButton>

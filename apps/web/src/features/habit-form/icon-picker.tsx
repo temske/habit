@@ -21,7 +21,7 @@ export type PickerSize = "step" | "inline" | "sheet" | "popover";
 const GRID_HEIGHT: Record<PickerSize, string> = {
   step: "h-[min(21rem,46dvh)]",
   inline: "h-[min(14.5rem,34dvh)]",
-  sheet: "h-[min(24rem,52dvh)]",
+  sheet: "h-[min(26.75rem,57dvh)]",
   popover: "h-[min(15rem,38dvh)]",
 };
 
@@ -75,7 +75,7 @@ export function IconPicker({
   const emoji = trimmed === "" ? [] : searchEmoji(trimmed);
 
   return (
-    <div className="flex flex-col gap-3" style={habitColorStyle(color)}>
+    <div className="flex flex-col" style={habitColorStyle(color)}>
       {/* In the two columns of a wide form, the search and the tabs share a row. */}
       <div
         className={cn(
@@ -145,10 +145,16 @@ export function IconPicker({
         ) : null}
       </div>
 
-      {/* The sheets put the button right under the grid, so the grid is cut at the button's top
-          edge; the space at the end of the scroll keeps the last row off the button. */}
+      {/* The grid scrolls up to the tabs and fades out under them, over the gap that it keeps from
+          them at rest. In a step the button is right under the grid, so the grid is cut at the
+          button's top edge; the space at the end of the scroll keeps the last row off the button.
+          In a sheet of its own the grid runs down to the sheet's bottom edge. */}
       <div
-        className={cn("-mx-1 overflow-y-auto overscroll-contain px-1 pb-4", GRID_HEIGHT[size])}
+        className={cn(
+          "-mx-1 overflow-y-auto overscroll-contain px-1 pt-3 [mask-image:linear-gradient(to_bottom,transparent,black_0.75rem)]",
+          size === "sheet" ? "-mb-5 pb-8" : "pb-4",
+          GRID_HEIGHT[size],
+        )}
         onKeyDown={moveFocusInGrid}
       >
         {trimmed !== "" ? (
@@ -315,7 +321,7 @@ function IconCell({
 /** A cell of the grid. The chosen one takes 18% of the habit color and a ring at 70%. */
 function cellClass(selected: boolean): string {
   return cn(
-    "grid aspect-square min-h-11 place-items-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.95] hover:bg-surface-2",
+    "grid aspect-square min-h-11 place-items-center squircle-[0.75rem] transition-[background-color,scale] duration-150 ease-out active:scale-[0.95] hover:bg-surface-2",
     selected &&
       "bg-[color-mix(in_oklab,var(--c)_18%,var(--surface))] shadow-[inset_0_0_0_0.09375rem_color-mix(in_oklab,var(--c)_70%,transparent)] hover:bg-[color-mix(in_oklab,var(--c)_18%,var(--surface))]",
   );

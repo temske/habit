@@ -12,11 +12,11 @@ import { cn } from "@/lib/utils";
 import { EASE_OUT, FADE_IN, rowPresence } from "./presence";
 
 /**
- * A field on the sheet, as DESIGN.md has it: the `field` fill, a capsule, an inset ring
+ * A field on the sheet, as DESIGN.md has it: the `field` fill, a 0.875rem squircle, an inset ring
  * in `ink-4` on focus, and 16px or more so iOS does not zoom.
  */
 export const fieldClass =
-  "h-12 w-full min-w-0 rounded-full bg-field px-5 text-ink outline-none transition-[box-shadow] duration-[120ms] placeholder:text-ink-3 focus-visible:shadow-[inset_0_0_0_0.09375rem_var(--ink-4)] focus-visible:outline-none";
+  "h-12 w-full min-w-0 squircle-[0.875rem] bg-field px-5 text-ink outline-none transition-[box-shadow] duration-[120ms] placeholder:text-ink-3 focus-visible:shadow-[inset_0_0_0_0.09375rem_var(--ink-4)] focus-visible:outline-none";
 
 /** The label of a group of controls, such as "Options". Quiet, never an eyebrow above a heading. */
 export function SectionLabel({
@@ -110,7 +110,7 @@ export function Segmented<T extends string>({
         value={value}
         onValueChange={(next) => onChange(next as T)}
         disabled={disabled}
-        className="grid auto-cols-fr grid-flow-col gap-0.5 rounded-full bg-surface-2 p-0.5"
+        className="grid auto-cols-fr grid-flow-col gap-0.5 squircle-[0.875rem] bg-surface-2 p-0.5"
       >
         {options.map((option) => (
           <Radio.Root
@@ -118,7 +118,7 @@ export function Segmented<T extends string>({
             value={option.value}
             aria-describedby={option.hint === undefined ? undefined : `${hintId}-${option.value}`}
             className={cn(
-              "relative isolate flex min-w-0 touch-manipulation select-none items-center justify-center rounded-full text-ink-3 transition-[color,scale] duration-150 ease-out data-checked:text-ink active:scale-[0.97] data-disabled:active:scale-100",
+              "relative isolate flex min-w-0 touch-manipulation select-none items-center justify-center squircle-[0.75rem] text-ink-3 transition-[color,scale] duration-150 ease-out data-checked:text-ink active:scale-[0.97] data-disabled:active:scale-100",
               tall ? "h-14 flex-col gap-0.5" : "h-10 gap-1.5",
             )}
           >
@@ -126,7 +126,7 @@ export function Segmented<T extends string>({
               <motion.span
                 layoutId={reduceMotion ? undefined : pillId}
                 aria-hidden
-                className="absolute inset-0 -z-10 rounded-full bg-surface shadow-[0_0.0625rem_0.1875rem_oklch(0_0_0/0.1)] dark:bg-surface-3"
+                className="absolute inset-0 -z-10 squircle-[0.75rem] bg-surface shadow-[0_0.0625rem_0.1875rem_oklch(0_0_0/0.1)] dark:bg-surface-3"
                 initial={reduceMotion ? { opacity: 0 } : false}
                 animate={{ opacity: 1 }}
                 transition={reduceMotion ? FADE_IN : springs.lift}
@@ -212,22 +212,27 @@ export function ColorSwatches({
 /**
  * A button of the sheet (DESIGN.md, "Buttons"). The primary one, the single action that ends a
  * step, is solid `ink` on `ground`; the quiet one is the usual `surface-2` button; the destructive
- * one is tinted with `destructive`, its text mixed with `ink` so it keeps its contrast.
+ * one is tinted with `destructive`, its text mixed with `ink` so it keeps its contrast. A `large`
+ * button ends a sheet: 3.25rem tall, as the name field, and a capsule concentric with the sheet's
+ * bottom corners.
  */
 export function SheetButton({
   variant = "primary",
+  size = "regular",
   className,
   children,
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "quiet" | "destructive";
+  size?: "regular" | "large";
 }) {
   return (
     <button
       type="button"
       {...rest}
       className={cn(
-        "flex h-11 items-center justify-center gap-1.5 rounded-full px-5 text-[0.9375rem] font-semibold tracking-[-0.01em] transition-[scale,background-color,opacity] duration-[120ms] ease-out active:scale-[0.97] disabled:opacity-40 disabled:active:scale-100",
+        "flex items-center justify-center gap-1.5 rounded-full px-5 font-semibold tracking-[-0.01em] transition-[scale,background-color,opacity] duration-[120ms] ease-out active:scale-[0.97] disabled:opacity-40 disabled:active:scale-100",
+        size === "large" ? "h-[3.25rem] text-[1.0625rem]" : "h-11 text-[0.9375rem]",
         variant === "primary"
           ? "bg-ink text-ground"
           : variant === "destructive"
@@ -296,6 +301,7 @@ export function StepButton({
   return (
     <SheetButton
       variant={variant}
+      size="large"
       onClick={onClick}
       aria-label={label}
       className="relative w-full overflow-hidden transition-[scale,background-color,color] duration-[120ms,200ms,200ms]"
@@ -322,7 +328,7 @@ export function StepButton({
  * The buttons at the end of a step. They stick to the bottom of the sheet while the content above
  * scrolls (a long list of Options, a short desktop window, an open keyboard), so the main action
  * is always in reach. What passes under them is cut at the top edge of the button, as under the
- * sheet's footer.
+ * sheet's footer, and they sit as low as the footer does.
  */
 export function StickyFooter({ children }: { children: ReactNode }) {
   return <div className="sticky bottom-0 z-10 -mx-5 -mb-5 bg-surface px-5 pb-5">{children}</div>;

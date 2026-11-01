@@ -537,8 +537,6 @@
     --sheet-below: env(safe-area-inset-bottom, 0px);
     /* The room above the sheet's tallest height. */
     --sheet-room: calc(2.5rem + env(safe-area-inset-top, 0px));
-    /* Extra bottom padding of the content, to clear the home indicator under the sheet. */
-    --sheet-clear: 0px;
     /* The radius of all four corners, before the squircle factor. */
     --sheet-corner: 1.25rem;
 
@@ -568,7 +566,6 @@
      wrong. */
   .sheet-viewport[data-hug] {
     --sheet-below: 0px;
-    --sheet-clear: max(0px, env(safe-area-inset-bottom, 0px) - 0.5rem);
     --sheet-corner: calc(var(--display-radius) - 0.5rem);
   }
 
@@ -582,8 +579,8 @@
     --sheet-room: calc(1.625rem + env(safe-area-inset-top, 0px));
   }
 
-  /* A column: the handle and the header at the top, the footer at the bottom, and between them
-     the body, the only part that scrolls (.sheet-scroll). */
+  /* A column: the handle at the top, the footer at the bottom, and between them the scroll
+     (.sheet-scroll), with the header stuck to its top. */
   .sheet-popup {
     position: relative;
     display: flex;
@@ -615,7 +612,6 @@
     min-height: 0;
   }
 
-  .sheet-content > .sheet-header,
   .sheet-content > .sheet-footer {
     flex: none;
   }
@@ -684,9 +680,11 @@
     user-select: none;
   }
 
-  /* Out of the flow, over the header: the header sits at the same place as in a dialog. */
+  /* Out of the flow, over the header: the header sits at the same place as in a dialog. Above the
+     header's fade, which would cover it. */
   .sheet-handle {
     position: absolute;
+    z-index: 11;
     top: 0.5rem;
     left: 50%;
     width: 2.25rem;
@@ -787,8 +785,15 @@
 
   /* The title is centered on the sheet, as on iOS, and level with the close disc at the right. An
      empty cell as wide as the close target balances it on the left, so a long title ends before
-     the disc on both sides. A description goes under the title. */
+     the disc on both sides. A description goes under the title.
+     The header sticks to the top of the sheet's scroll, and the content scrolls under it. As the
+     bar of an iOS 26 sheet, it has no edge: a fade of the surface, solid behind the title and
+     clear 0.75rem below the header, over the body's top padding, so at rest it covers nothing. */
   .sheet-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    isolation: isolate;
     /* Larger corners move the close disc in, so it stays clear of the curve: 0.75rem from the
        edges at the normal radius, 1rem at the 54px corners of a 17 Pro. */
     --sheet-header-inset: max(0.75rem, var(--sheet-corner, 0px) * 0.3);
@@ -802,6 +807,15 @@
 
   .sheet-header::before {
     content: "";
+  }
+
+  .sheet-header::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 -0.75rem;
+    z-index: -1;
+    background: linear-gradient(to bottom, var(--surface) 45%, transparent);
+    pointer-events: none;
   }
 
   .sheet-heading {
@@ -898,18 +912,15 @@
   /* The buttons that end the sheet: under the content, not in it, so the height changes above
      them. They stick to the bottom while a long step scrolls, and what passes under them is cut
      at the top edge of the button, with no fade. The body's bottom padding is the gap above them
-     at the end of the scroll. */
+     at the end of the scroll. As far from the bottom edge as from the sides, so a capsule button
+     is concentric with the sheet's corners; in the installed app the home indicator passes under
+     the sheet, below the button. */
   .sheet-footer {
     position: sticky;
     bottom: 0;
     z-index: 10;
-    padding: 0 1.25rem calc(1.25rem + var(--sheet-clear, 0px));
+    padding: 0 1.25rem 1.25rem;
     background: var(--surface);
-  }
-
-  /* Without a footer, the body is the end of the sheet. */
-  .sheet-content:not(:has(> .sheet-footer)) .sheet-body {
-    padding-bottom: calc(1.25rem + var(--sheet-clear, 0px));
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1224,16 +1235,17 @@
 /* ── Controls inside sheets (the value input, and the forms) ────────────────────────────────── */
 
 @layer components {
+  /* A button that ends a value input: as large as the ones that end a form (SheetButton). */
   .sheet-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.375rem;
-    height: 2.75rem;
+    height: 3.25rem;
     padding: 0 1.25rem;
     background: var(--surface-2);
     color: var(--ink);
-    font-size: 0.9375rem;
+    font-size: 1.0625rem;
     font-weight: 600;
     letter-spacing: -0.01em;
     border-radius: 999px;
@@ -1333,8 +1345,9 @@
     font-size: 1rem;
     font-weight: 500;
     text-align: left;
-    /* 1.4375rem: half the height of a one-line option, so it is a pill, as the buttons are. */
-    border-radius: 1.4375rem;
+    /* The squircle of the form's fields and segments. */
+    border-radius: calc(0.875rem * var(--squircle-k));
+    corner-shape: squircle;
     transition:
       background-color 120ms ease,
       color 120ms ease,
@@ -1398,8 +1411,9 @@
     background: var(--field);
     color: var(--ink);
     line-height: 1.375rem;
-    /* The curve of the one-line fields (half of 3rem), so its corners match theirs. */
-    border-radius: 1.5rem;
+    /* The squircle of the one-line fields. */
+    border-radius: calc(0.875rem * var(--squircle-k));
+    corner-shape: squircle;
     resize: none;
     field-sizing: content;
     outline: none;

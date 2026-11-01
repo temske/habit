@@ -64,7 +64,7 @@ export function IconTile({
       aria-label="Change icon"
       aria-expanded={expanded}
       style={habitColorStyle(color)}
-      className="relative isolate grid size-[3.25rem] flex-none place-items-center overflow-hidden rounded-full shadow-[0_0_0_0_color-mix(in_oklab,var(--c)_50%,transparent)] transition-[scale,box-shadow] duration-150 ease-out active:scale-[0.95] aria-expanded:shadow-[0_0_0_0.25rem_color-mix(in_oklab,var(--c)_50%,transparent)]"
+      className="relative isolate grid size-[3.25rem] flex-none place-items-center overflow-hidden squircle-[0.875rem] shadow-[0_0_0_0_color-mix(in_oklab,var(--c)_50%,transparent)] transition-[scale,box-shadow] duration-150 ease-out active:scale-[0.95] aria-expanded:shadow-[0_0_0_0.25rem_color-mix(in_oklab,var(--c)_50%,transparent)]"
     >
       <TileFill color={color} fillOnMount={fillOnMount} onRise={pulse} />
       <AnimatePresence initial={false} mode="popLayout">
@@ -227,7 +227,7 @@ export function NameFields({
               aria-describedby={message === undefined ? undefined : messageId}
               className={cn(
                 fieldClass,
-                "h-[3.25rem] text-[1.0625rem] font-semibold tracking-[-0.01em]",
+                "h-[3.25rem] text-[1.0625rem] font-semibold tracking-[-0.01em] placeholder:font-normal placeholder:tracking-normal",
               )}
             />
             <FieldMessage id={messageId} message={message} />
