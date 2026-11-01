@@ -11,8 +11,12 @@ import { spring, type Transition } from "motion";
 export const springs = {
   /** The fill of a Day gauge: rises with a little bounce. */
   fill: { type: "spring", visualDuration: 0.38, bounce: 0.24 },
-  /** Sheets, dialogs and popovers: open, close and move. Nearly no bounce. */
+  /** A page that moves: the Month pager, the habit page beside the list. Nearly no bounce. */
   sheet: { type: "spring", visualDuration: 0.42, bounce: 0.1 },
+  /** A bottom sheet that opens, and the sheet under it that comes back. Quick, nearly no bounce. */
+  open: { type: "spring", visualDuration: 0.3, bounce: 0.08 },
+  /** A sheet over a sheet (the icon and emoji pickers), and the step back of the one under it. */
+  stack: { type: "spring", visualDuration: 0.18, bounce: 0 },
   /** A sheet that changes its height between steps. */
   morph: { type: "spring", visualDuration: 0.34, bounce: 0.12 },
   /** A row that lifts for a reorder, or settles after it. */
@@ -44,6 +48,8 @@ export const durations = {
 export const cssSprings = {
   fill: spring(springs.fill.visualDuration, springs.fill.bounce).toString(),
   sheet: spring(springs.sheet.visualDuration, springs.sheet.bounce).toString(),
+  open: spring(springs.open.visualDuration, springs.open.bounce).toString(),
+  stack: spring(springs.stack.visualDuration, springs.stack.bounce).toString(),
   morph: spring(springs.morph.visualDuration, springs.morph.bounce).toString(),
   lift: spring(springs.lift.visualDuration, springs.lift.bounce).toString(),
 };
@@ -60,7 +66,8 @@ function timingOf(css: string): { duration: number; easing: string } {
 }
 
 /**
- * Puts the CSS springs on the document as custom properties (`--spring-fill`, `--spring-sheet`).
+ * Puts the CSS springs on the document as custom properties (`--spring-fill`, `--spring-sheet`,
+ * `--spring-open`, `--spring-stack`).
  * The sheet and the lift springs also come in their two parts (`--spring-sheet-duration` and
  * `--spring-sheet-easing`, and the same for `lift`), for an animation whose name is not the
  * author's (a view transition's group).
@@ -68,6 +75,8 @@ function timingOf(css: string): { duration: number; easing: string } {
 export function installCssSprings(root: HTMLElement = document.documentElement): void {
   root.style.setProperty("--spring-fill", cssSprings.fill);
   root.style.setProperty("--spring-sheet", cssSprings.sheet);
+  root.style.setProperty("--spring-open", cssSprings.open);
+  root.style.setProperty("--spring-stack", cssSprings.stack);
   for (const name of ["sheet", "lift"] as const) {
     const [duration = "", ...easing] = cssSprings[name].split(" ");
     root.style.setProperty(`--spring-${name}-duration`, duration);

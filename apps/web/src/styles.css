@@ -459,7 +459,7 @@
     min-height: 100dvh;
     background: var(--backdrop);
     opacity: calc(1 - var(--drawer-swipe-progress, 0));
-    transition: opacity 400ms var(--ease-drawer);
+    transition: opacity 260ms var(--ease-drawer);
   }
 
   .sheet-backdrop[data-starting-style],
@@ -472,7 +472,7 @@
   }
 
   .sheet-backdrop[data-ending-style] {
-    transition-duration: calc(var(--drawer-swipe-strength, 1) * 400ms);
+    transition-duration: calc(var(--drawer-swipe-strength, 1) * 260ms);
   }
 
   /* Safari 26 ignores theme-color and colors its top and bottom bars from a fixed element at each
@@ -571,11 +571,13 @@
     box-shadow: var(--elevation);
     outline: none;
     transform: translateY(var(--drawer-swipe-movement-y, 0px));
+    /* It slides in with the open spring. The step back under a stacked sheet (translate, scale,
+       filter) moves with the stack spring, in step with the sheet in front. */
     transition:
-      transform var(--spring-sheet, 450ms var(--ease-drawer)),
-      translate var(--spring-sheet, 450ms var(--ease-drawer)),
-      scale var(--spring-sheet, 450ms var(--ease-drawer)),
-      filter var(--spring-sheet, 450ms var(--ease-drawer));
+      transform var(--spring-open, 300ms var(--ease-drawer)),
+      translate var(--spring-stack, 180ms var(--ease-drawer)),
+      scale var(--spring-stack, 180ms var(--ease-drawer)),
+      filter var(--spring-stack, 180ms var(--ease-drawer));
   }
 
   .sheet-content {
@@ -636,7 +638,17 @@
   }
 
   .sheet-popup[data-ending-style] {
-    transition: transform calc(var(--drawer-swipe-strength, 1) * 400ms) var(--ease-drawer);
+    transition: transform calc(var(--drawer-swipe-strength, 1) * 260ms) var(--ease-drawer);
+  }
+
+  /* A sheet over a sheet (the icon and emoji pickers) is a quick step inside a form: it comes in
+     with the stack spring and leaves in 160ms. */
+  .sheet-viewport[data-nested] .sheet-popup {
+    transition: transform var(--spring-stack, 180ms var(--ease-drawer));
+  }
+
+  .sheet-viewport[data-nested] .sheet-popup[data-ending-style] {
+    transition: transform calc(var(--drawer-swipe-strength, 1) * 160ms) var(--ease-drawer);
   }
 
   .sheet-popup[data-swiping] {
@@ -704,6 +716,11 @@
     transform: scale(0.96);
   }
 
+  /* A dialog over a dialog (the icon and emoji pickers) is quicker still. */
+  .dialog-viewport[data-nested] .dialog-popup {
+    transition-duration: 140ms;
+  }
+
   /* A dialog under a stacked one (the icon picker over the habit form) steps back and dims. */
   .dialog-popup[data-nested-dialog-open] {
     scale: 0.96;
@@ -740,31 +757,38 @@
     transform: scale(0.96);
   }
 
-  /* The close disc sits 1.25rem from the top and from the side, as far as the content is from the
-     edge, in every form of the sheet. The title is centered on the disc; a description goes under
-     the title. */
+  /* The title is centered on the sheet, as on iOS, and level with the close disc at the right. An
+     empty cell as wide as the close target balances it on the left, so a long title ends before
+     the disc on both sides. A description goes under the title. */
   .sheet-header {
     /* Larger corners move the close disc in, so it stays clear of the curve: 0.75rem from the
        edges at the normal radius, 1rem at the 54px corners of a 17 Pro. */
     --sheet-header-inset: max(0.75rem, var(--sheet-corner, 0px) * 0.3);
 
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: var(--sheet-header-inset) var(--sheet-header-inset) 0 1.25rem;
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem;
+    align-items: start;
+    gap: 0.25rem;
+    padding: var(--sheet-header-inset) var(--sheet-header-inset) 0;
+  }
+
+  .sheet-header::before {
+    content: "";
   }
 
   .sheet-heading {
     display: flex;
-    flex: 1;
     flex-direction: column;
+    align-items: center;
     gap: 0.0625rem;
     min-width: 0;
+    text-align: center;
     /* Half of what the close target is taller than a line of the title. */
     padding-top: calc((2.75rem - 1.375rem) / 2);
   }
 
   .sheet-title {
+    max-width: 100%;
     min-width: 0;
     overflow: hidden;
     font-size: 1.0625rem;
@@ -1141,14 +1165,13 @@
     justify-content: center;
     gap: 0.375rem;
     height: 2.75rem;
-    padding: 0 1rem;
+    padding: 0 1.25rem;
     background: var(--surface-2);
     color: var(--ink);
     font-size: 0.9375rem;
     font-weight: 600;
     letter-spacing: -0.01em;
-    border-radius: calc(0.625rem * var(--squircle-k));
-    corner-shape: squircle;
+    border-radius: 999px;
     transition:
       background-color 120ms ease,
       color 120ms ease,
@@ -1184,8 +1207,7 @@
     font-size: 1.0625rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    border-radius: calc(0.875rem * var(--squircle-k));
-    corner-shape: squircle;
+    border-radius: 999px;
     transition:
       background-color 120ms ease,
       transform 120ms var(--ease-out);
@@ -1241,13 +1263,13 @@
     align-items: center;
     gap: 0.75rem;
     min-height: 2.875rem;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 1rem;
     color: var(--ink-2);
     font-size: 1rem;
     font-weight: 500;
     text-align: left;
-    border-radius: calc(0.625rem * var(--squircle-k));
-    corner-shape: squircle;
+    /* 1.4375rem: half the height of a one-line option, so it is a pill, as the buttons are. */
+    border-radius: 1.4375rem;
     transition:
       background-color 120ms ease,
       color 120ms ease,
@@ -1307,12 +1329,12 @@
     width: 100%;
     min-height: 5.5rem;
     max-height: 40dvh;
-    padding: 0.75rem 0.875rem;
+    padding: 0.75rem 1.25rem;
     background: var(--field);
     color: var(--ink);
     line-height: 1.375rem;
-    border-radius: calc(0.625rem * var(--squircle-k));
-    corner-shape: squircle;
+    /* The curve of the one-line fields (half of 3rem), so its corners match theirs. */
+    border-radius: 1.5rem;
     resize: none;
     field-sizing: content;
     outline: none;

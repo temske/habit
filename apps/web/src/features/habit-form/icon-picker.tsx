@@ -86,7 +86,7 @@ export function IconPicker({
         <div className={cn("relative", wideRow && "min-[60rem]:flex-1")}>
           <MagnifyingGlassIcon
             aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 size-[1.125rem] text-ink-3"
+            className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 size-[1.125rem] text-ink-3"
           />
           <input
             ref={search}
@@ -113,7 +113,7 @@ export function IconPicker({
                       : undefined;
               if (first !== undefined) onPick(first);
             }}
-            className={cn(fieldClass, "pr-11 pl-10 [&::-webkit-search-cancel-button]:hidden")}
+            className={cn(fieldClass, "pr-11 pl-11 [&::-webkit-search-cancel-button]:hidden")}
           />
           {query === "" ? null : (
             <button
@@ -315,7 +315,7 @@ function IconCell({
 /** A cell of the grid. The chosen one takes 18% of the habit color and a ring at 70%. */
 function cellClass(selected: boolean): string {
   return cn(
-    "grid aspect-square min-h-11 place-items-center squircle-[0.625rem] transition-[background-color,scale] duration-150 ease-out active:scale-[0.95] hover:bg-surface-2",
+    "grid aspect-square min-h-11 place-items-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.95] hover:bg-surface-2",
     selected &&
       "bg-[color-mix(in_oklab,var(--c)_18%,var(--surface))] shadow-[inset_0_0_0_0.09375rem_color-mix(in_oklab,var(--c)_70%,transparent)] hover:bg-[color-mix(in_oklab,var(--c)_18%,var(--surface))]",
   );

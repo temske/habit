@@ -663,8 +663,7 @@
     font-weight: 500;
     letter-spacing: -0.01em;
     font-variant-numeric: tabular-nums;
-    border-radius: calc(0.625rem * var(--squircle-k));
-    corner-shape: squircle;
+    border-radius: 999px;
     outline-offset: -0.125rem;
     transition:
       background-color 120ms ease,
