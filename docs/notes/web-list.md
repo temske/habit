@@ -52,8 +52,16 @@ fallback. The shadcn variables map onto these tokens, so a shadcn component wear
 - **Motion.** The gauge fill is a CSS transition with Motion's spring as a `linear()` easing, so a
   fast series of taps retargets it. The pulse to about 1.04 is a physical spring started with a
   velocity. Under reduced motion the fill changes in place with a short fade, and sheets fade.
-- **Fake data knobs.** In fake mode, `VITE_HABIT_FAKE_LATENCY_MS` and `VITE_HABIT_FAKE_FAIL=true`
-  (in `apps/web/.env.development.local`, which git ignores) show the pending and the failed states.
+- **Fake data knobs.** In fake mode, `VITE_HABIT_FAKE_START_MS` (a cold start without a
+  snapshot: the sign-in loads for half of it, the data for the other half),
+  `VITE_HABIT_FAKE_LATENCY_MS` and `VITE_HABIT_FAKE_FAIL=true`
+  (in `apps/web/.env.development.local`, which git ignores) show the loading, the pending and the
+  failed states.
+- **The rubber band.** The root has `overscroll-behavior: contain`, not `none`: iOS keeps its
+  bounce at the ends of the list, so a fling eases out instead of stopping dead, and Chrome still
+  has no pull-to-refresh and no swipe between pages. The sheets keep their scroll to themselves:
+  their scroll areas have `contain`, and Base UI's Drawer cancels a touch move that would reach
+  the page.
 
 ## B: the habit list and the input of a value
 
@@ -74,8 +82,12 @@ fallback. The shadcn variables map onto these tokens, so a shadcn component wear
   `moveHabit` with `orderBetween` on drop.
 - **A tap on the icon or the name** opens `/habits/<id>`.
 - **Midnight**: the columns move to the new Day while the app is open (`useToday`).
-- **Loading**: a skeleton while `source === "none"`, shown after 300ms so a fast start never
-  flashes it.
+- **Loading**: the app's loading screen (`AuthGate`) stays until the habits are there and the
+  icons of the first screen have loaded (2 s at most), then fades out over the complete list. The
+  list had a skeleton before; the owner saw the start build up in steps (the day header, the rows
+  without icons, the icons), so the list now shows once.
+- **A new habit enters** (`features/list/row-entrance.ts`): its row grows at its place while the
+  create sheet leaves. Only a habit made in the last 3 s, so a load or a reload never animates.
 - **No habits**: the create sheet opens by itself, once per visit of the list.
 - **Failed writes**: the screen rolls back (the provider does it) and "Couldn't save" offers Retry,
   which performs the same Action again.
@@ -113,7 +125,7 @@ fallback. The shadcn variables map onto these tokens, so a shadcn component wear
 
 - Behaviour tests (`features/list/habit-list.test.tsx`, `features/entry-input/entry-input.test.tsx`)
   on the fake provider: tap per kind, paint and Undo, Retry after a failed write, the ghost row,
-  the automatic create sheet, the skeleton, midnight, the number and text inputs, a link to an
+  the automatic create sheet, the loading screen until the data, midnight, the number and text inputs, a link to an
   unknown habit.
 - Screenshots at 390×844 and 1280×800 in both themes, every input state, and the worst case at
   320px (break-ui). In dev fake mode, `?data=worst` (or `empty`, `one`, `many`) swaps the demo

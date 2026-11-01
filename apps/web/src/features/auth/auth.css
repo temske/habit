@@ -250,8 +250,25 @@
 
   /* The ground alone at first; the empty mark fades in only when the start is slow (a start
      with a snapshot, or a sign-in check, takes well under a second). */
-  .auth-loading {
+  .auth-loading .auth-screen {
     animation: auth-fade-in 400ms var(--ease-out) 1s both;
+  }
+
+  /* The app is complete under the frame: the frame fades out over it, the mark with it (if it
+     came), so the whole screen appears in one fade. A fade, also under reduced motion. */
+  .auth-loading[data-leaving] {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: var(--ground);
+    pointer-events: none;
+    animation: auth-fade-out 400ms var(--ease-out) both;
+  }
+
+  @keyframes auth-fade-out {
+    to {
+      opacity: 0;
+    }
   }
 
   /* "No access" draws its mark at another place than the loading screen: it fades in instead of

@@ -124,12 +124,23 @@ test("with no habits yet, the create sheet opens by itself", async () => {
   await waitFor(() => expect(router.state.location.search).toMatchObject({ new: true }));
 });
 
-test("until the data comes, the list shows a skeleton", async () => {
+test("until the data comes, the loading screen stays in place of the list", async () => {
   // The owner is signed in, and neither the snapshot nor the live data is there yet.
   renderApp("/", {}, { source: "none", state: emptyState() });
 
-  expect(await screen.findByLabelText("Loading habits")).toBeTruthy();
+  expect((await screen.findByRole("status")).textContent).toBe("Loading");
+  expect(screen.queryByRole("heading", { name: "Habits" })).toBeNull();
   expect(screen.queryByRole("button", { name: "New habit" })).toBeNull();
+});
+
+test("after a slow start, the list shows complete: every row with its icon", async () => {
+  renderApp("/", { startMs: 200 });
+
+  expect((await screen.findByRole("status")).textContent).toBe("Loading");
+  await screen.findByRole("heading", { name: "Habits" });
+  for (const link of screen.getAllByRole("link", { name: /.+/ })) {
+    expect(link.querySelector("svg")).not.toBeNull();
+  }
 });
 
 test("the columns move to the new Day at midnight", async () => {

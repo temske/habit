@@ -290,7 +290,7 @@ Every color is OKLCH. The light theme is the default in CSS. The dark theme repl
 - **Line** (`line`): the frame of an empty Day and the dashed ghost gauge. Never a divider.
 - **Strong Line** (`line-strong`): an empty frame under the pointer, the sheet handle, and the scrollbar thumb.
 - **Surface** (`surface`): sheets, dialogs, popovers, and a row lifted for a reorder. In the light theme it is white like the ground and a shadow lifts it; in the dark theme it is a lighter grey, and the lightness is the elevation.
-- **Surface 2** (`surface-2`): the rest fill of a control inside a sheet and of the "New habit" button, a checked option, the close button's disc, and skeleton shapes.
+- **Surface 2** (`surface-2`): the rest fill of a control inside a sheet and of the "New habit" button, a checked option, the close button's disc, and the skeleton shapes of the habit page.
 - **Surface 3** (`surface-3`): the hover and press fill of a control inside a sheet, the close button's disc included.
 - **Tile** (`tile`): an empty Day on the habit page, which has no frame. A partial Day of the calendar fills over 24% of the habit color mixed into the tile (in oklab, so the tint keeps the habit's hue); a Day of the year grid is the habit color mixed into the tile, from 25% to solid.
 - **Field** (`field`): a text field inside a sheet. In the light theme it equals `surface-2`. In the dark theme it is a well of pure black, so the placeholder keeps its contrast.
@@ -375,7 +375,7 @@ Stacking: the scrim is at z-index 50, the Day under edit at 51, and the sheet at
 
 Squircles. Every rounded corner uses `corner-shape: squircle` with a plain `border-radius` as the fallback. A superellipse looks tighter than a circle arc of the same radius, so where the browser supports `corner-shape`, the radius grows by 1.75. Two tools do this: the `squircle-*` Tailwind utility (its value is the fallback radius), and `calc(<radius> * var(--squircle-k))` in component CSS, where `--squircle-k` is 1 or 1.75.
 
-Pills (the toast and its action) use an infinite radius with `corner-shape: superellipse(1.5)` (the `squircle-full` utility). Small round parts (the close disc, the sheet handle, the skeleton name bar) use a plain 999px radius.
+Pills (the toast and its action) use an infinite radius with `corner-shape: superellipse(1.5)` (the `squircle-full` utility). Small round parts (the close disc, the sheet handle, the habit page's skeleton name bar) use a plain 999px radius.
 
 The radius scale, as fallback values: the gauge is 19% of its side, an icon tile 18% of its side, a control 0.625rem, a lifted row 0.75rem, a stepper and a popover 0.875rem, a dialog 1rem, a bottom sheet 1.25rem. Larger containers get larger radii.
 
@@ -430,7 +430,7 @@ Empty and zero are both "frame only", but they differ: a recorded zero is data a
 
 - **Style:** a Phosphor icon in the duotone weight, drawn in the habit color with no tile behind it. The duotone's 20% layer is its soft tint. An emoji is the alternative, at 90% of the box.
 - **Size:** `icon` (22px on a phone) in the list; 1.25rem next to a sheet title.
-- **Loading:** a Phosphor icon loads on first use; the box keeps its size, so the row does not move, and an icon that comes after its row fades in over 160ms with `--ease-out`.
+- **Loading:** a Phosphor icon loads on first use; the box keeps its size, so the row does not move, and an icon that comes after its row fades in over 160ms with `--ease-out`. At start the app waits for the icons of the first screen (`loadHabitIcons`), so they draw in the list's first frame.
 
 ### Habit row
 
@@ -438,7 +438,7 @@ Empty and zero are both "frame only", but they differ: a recorded zero is data a
 - **Name:** Title type in `ink-2`; `ink` under a fine pointer (120ms).
 - **Lifted for a reorder:** the row scales to 1.02, takes a `surface` background with a 0.75rem squircle radius and `var(--elevation)`, and the name turns `ink`. The neighbors move aside in 200ms with `--ease-out`. Under reduced motion the lift has no scale and the neighbors move at once.
 - **"New habit" button:** under the last row, as wide as the rows between the gutters and 3rem high. A `surface-2` fill with a 0.75rem squircle radius, a bold Phosphor plus and "New habit" centered in Control type, in `ink-2`. Under a fine pointer the fill turns `surface-3` and the text `ink`. A press scales it to 0.98. It is the one control with a fill on the bare ground, so the way to a first habit is never missed.
-- **Skeleton:** the shape of the list in `surface-2` (an icon tile and a pill for the name) next to empty gauges. It waits 300ms before it shows, then fades in over 240ms, so a fast start never flashes it.
+- **A new habit enters:** after "Add habit", its row grows at its place from no height with the morph spring, 120ms after the press, while the sheet leaves; the rows under it and "New habit" move down with it, and its content comes down 0.75rem and fades in over 240ms. Only a habit made in the last 3 seconds enters: the first load, the snapshot's change to the live data and the Undo of a delete never animate. Under reduced motion nothing moves, and the row fades in over 180ms.
 
 ### Day header
 
@@ -540,7 +540,7 @@ The page of one habit (`/habits/$habitId`), in `features/habit-page/`.
 The screens of `features/auth/`. `AuthGate` in the root route shows the app to the owner only, and gives each other state of the sign-in its own screen. They share one frame: a column of at most 24rem, the mark at `max(4rem, 26dvh)` below the safe area, a page title 1.5rem under it, and the content 2.5rem under the title.
 
 - **The mark:** five `DaySquare`s of 2.125rem in a row, with the gauge gap, in sky, green, ochre, violet and rose. It is the only color on these screens.
-- **Loading:** the bare ground, so a fast start goes straight to its screen. After 1s the empty mark fades in (400ms, `--ease-out`) at the place where the sign-in screen draws it.
+- **Loading:** the bare ground, so a fast start goes straight to its screen. After 1s the empty mark fades in (400ms, `--ease-out`) at the place where the sign-in screen draws it. For the owner it stays until the habits are there (the snapshot or the live data) and the icons of the first screen have loaded (2s at most), then fades out over the complete list in 400ms with `--ease-out`, the mark with it. The list never builds up in steps, so it has no skeleton.
 - **Sign-in:** centered. The mark fills one square after the other (70ms apart) with the gauge's spring and pulse, then the title "Habit" and one primary button, "Continue with Google" (a bold Phosphor Google logo, 0.375rem before the label). While Google opens, the label says "Opening Google…". No other copy.
 - **Email code (development, and the installed app):** "Sign in with an email code", a quiet text action in `ink-3` with a 44px target, opens two short steps under the button, with the morph spring: the email field and "Send code", then the code field (tabular, centered, letter-spaced 0.2em) and "Sign in". Fields on the ground use `surface-2` in the light theme and `surface` in the dark theme. In development, a note in `ink-3` names the test users; "owner" and "guest" in it are underlined words that fill the field. The installed app (standalone display) shows the same two steps without the note, because Google's sign-in cannot return to an installed app on iOS. A message under a field is 0.875rem in `ink-2`.
 - **No access:** the same frame, left-aligned in the 600px column, nearer the top (`max(3rem, 12dvh)`), and it fades in over 240ms. The mark stays empty: this account has no data. The title "No access", a plain paragraph, then the user id and the command, each with a label (0.875rem at 500, `ink-3`) and a "Copy" text action (a bold Phosphor copy icon; "Copied" with a check for 1.6s). The values are in the code type. The command breaks between its words, never inside one. "Sign out" is a quiet button.

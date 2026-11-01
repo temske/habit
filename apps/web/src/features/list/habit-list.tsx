@@ -22,13 +22,13 @@ import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useAct } from "@/components/act";
-import { DaySquare } from "@/components/day-square";
 import { dayOfMonth, weekdayLetter } from "@/components/format";
 import { preloadHabitIcons } from "@/components/habit-icon";
 import { haptic } from "@/components/haptics";
 import { entryRef, useOpenSheet, useSheetSearch } from "@/components/sheet-search";
 import { useIsWide } from "@/components/use-media-query";
 import { HabitRow } from "@/features/list/habit-row";
+import { useRowEntrance } from "@/features/list/row-entrance";
 import { useToday } from "@/features/list/use-today";
 
 /** A press on the icon or the name this long lifts the row for a reorder (touch). */
@@ -49,9 +49,11 @@ export function HabitList({ pageOpen = false }: { pageOpen?: boolean }) {
   const wide = useIsWide();
   const days = useMemo(() => lastDays(today, wide ? 7 : 5), [today, wide]);
   const ignoreClicksUntil = useRef(0);
+  const rows = useRef<HTMLDivElement>(null);
 
   useEffect(() => preloadHabitIcons(habits.map((habit) => habit.icon)), [habits]);
   useOpenNewWhenEmpty(source !== "none" && habits.length === 0);
+  useRowEntrance(rows, habits, source !== "none");
 
   const onTap = useCallback(
     (habit: Habit, day: Day) => {
@@ -118,42 +120,38 @@ export function HabitList({ pageOpen = false }: { pageOpen?: boolean }) {
     <div className="habit-list">
       <h1 className="sr-only">Habits</h1>
       <DayHeader days={days} today={today} />
-      {source === "none" ? (
-        <ListSkeleton days={days} />
-      ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-          accessibility={{ announcements }}
-          onDragStart={() => haptic("lift")}
-          onDragEnd={onDragEnd}
-          onDragCancel={() => {
-            ignoreClicksUntil.current = performance.now() + 250;
-          }}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+        accessibility={{ announcements }}
+        onDragStart={() => haptic("lift")}
+        onDragEnd={onDragEnd}
+        onDragCancel={() => {
+          ignoreClicksUntil.current = performance.now() + 250;
+        }}
+      >
+        <SortableContext
+          items={habits.map((habit) => habit.id)}
+          strategy={verticalListSortingStrategy}
         >
-          <SortableContext
-            items={habits.map((habit) => habit.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="relative">
-              {habits.map((habit) => (
-                <HabitRow
-                  key={habit.id}
-                  habit={habit}
-                  days={days}
-                  today={today}
-                  entries={entries}
-                  replace={pageOpen}
-                  onTap={onTap}
-                  onOpenInput={onOpenInput}
-                  onPaint={onPaint}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
-      )}
+          <div ref={rows} className="relative">
+            {habits.map((habit) => (
+              <HabitRow
+                key={habit.id}
+                habit={habit}
+                days={days}
+                today={today}
+                entries={entries}
+                replace={pageOpen}
+                onTap={onTap}
+                onOpenInput={onOpenInput}
+                onPaint={onPaint}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
       {source === "none" ? null : <NewHabitButton onClick={() => openSheet({ new: true })} />}
     </div>
   );
@@ -182,33 +180,6 @@ function NewHabitButton({ onClick }: { onClick: () => void }) {
       <PlusIcon weight="bold" aria-hidden />
       <span className="new-habit-label">New habit</span>
     </button>
-  );
-}
-
-const SKELETON_NAMES = ["4.5rem", "3.25rem", "5.5rem", "3rem", "4rem", "6rem", "3.75rem"];
-
-/** Shown until the first data comes (no snapshot yet): the shape of the list, without data. */
-function ListSkeleton({ days }: { days: Day[] }) {
-  return (
-    <div className="list-skeleton" aria-busy aria-label="Loading habits">
-      {SKELETON_NAMES.map((width) => (
-        <div key={width} className="habit-row">
-          <div className="habit-row-inner">
-            <span className="habit-row-head">
-              <span className="skeleton-icon" />
-              <span className="skeleton-name" style={{ width }} />
-            </span>
-            <span className="day-columns">
-              {days.map((day) => (
-                <span key={day} className="day-cell">
-                  <DaySquare color="stone" intensity={0} animated={false} />
-                </span>
-              ))}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 
