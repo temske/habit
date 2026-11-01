@@ -7,7 +7,8 @@
 
 /** The scrim's black, as in the `--backdrop` token: 20% on the light ground, 60% on the dark. */
 const SCRIM_ALPHA = { light: 0.2, dark: 0.6 } as const;
-const DURATION = 400;
+/** The scrim's fade (styles.css, `.sheet-backdrop`): the status bar must dim in step with it. */
+const DURATION = 260;
 
 /** `hex` (#rgb or #rrggbb) under black at `alpha`, as #rrggbb. Null for another color syntax. */
 export function dimHex(hex: string, alpha: number): string | null {
@@ -60,7 +61,7 @@ function paint(): void {
   }
 }
 
-/** Moves the dim toward `target` (0 or 1) in step with the scrim's 400ms fade. */
+/** Moves the dim toward `target` (0 or 1) in step with the scrim's fade: the same time and curve. */
 function animateTo(target: number): void {
   cancelAnimationFrame(frame);
   const reduce =
@@ -75,8 +76,7 @@ function animateTo(target: number): void {
   const start = performance.now();
   const step = (now: number) => {
     const t = Math.min(1, (now - start) / DURATION);
-    // An ease-out, close to the scrim's --ease-drawer.
-    level = from + (target - from) * (1 - (1 - t) ** 3);
+    level = from + (target - from) * easeDrawer(t);
     paint();
     if (t < 1) frame = requestAnimationFrame(step);
   };
@@ -94,4 +94,41 @@ export function dimThemeColor(): () => void {
     openSheets -= 1;
     if (openSheets === 0) animateTo(0);
   };
+}
+
+/**
+ * `--ease-drawer`, `cubic-bezier(0.32, 0.72, 0, 1)`, the curve of the scrim's fade: the progress at
+ * the time `t` (0 to 1). Newton's method finds the curve's parameter for `t`, with bisection when
+ * the slope is too flat for it.
+ */
+export function easeDrawer(t: number): number {
+  return cubicBezier(0.32, 0.72, 0, 1, t);
+}
+
+function cubicBezier(x1: number, y1: number, x2: number, y2: number, t: number): number {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  const coord = (a: number, b: number, u: number) =>
+    3 * a * u * (1 - u) ** 2 + 3 * b * u ** 2 * (1 - u) + u ** 3;
+  const slope = (a: number, b: number, u: number) =>
+    3 * a * (1 - u) ** 2 + 6 * (b - a) * u * (1 - u) + 3 * (1 - b) * u ** 2;
+  let u = t;
+  for (let i = 0; i < 8; i++) {
+    const error = coord(x1, x2, u) - t;
+    if (Math.abs(error) < 1e-6) return coord(y1, y2, u);
+    const d = slope(x1, x2, u);
+    if (Math.abs(d) < 1e-6) break;
+    u -= error / d;
+  }
+  let low = 0;
+  let high = 1;
+  u = t;
+  for (let i = 0; i < 30; i++) {
+    const x = coord(x1, x2, u);
+    if (Math.abs(x - t) < 1e-6) break;
+    if (x < t) low = u;
+    else high = u;
+    u = (low + high) / 2;
+  }
+  return coord(y1, y2, u);
 }
