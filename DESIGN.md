@@ -123,7 +123,7 @@ rounded:
   icon: "18%"
   control: "0.625rem"
   row: "0.75rem"
-  stepper: "0.875rem"
+  field: "1.5rem"
   popover: "0.875rem"
   dialog: "1rem"
   sheet: "1.25rem"
@@ -213,9 +213,9 @@ components:
     backgroundColor: "{colors.surface-2}"
     textColor: "{colors.ink}"
     typography: "{typography.control}"
-    rounded: "{rounded.control}"
+    rounded: "{rounded.pill}"
     height: "{spacing.touch}"
-    padding: "0 1rem"
+    padding: "0 1.25rem"
   button-hover:
     backgroundColor: "{colors.surface-3}"
   button-active:
@@ -225,7 +225,7 @@ components:
   stepper:
     backgroundColor: "{colors.surface-2}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.stepper}"
+    rounded: "{rounded.pill}"
     size: "3.5rem"
   stepper-active:
     backgroundColor: "{colors.surface-3}"
@@ -235,12 +235,12 @@ components:
   text-field:
     backgroundColor: "{colors.field}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.control}"
-    padding: "0.75rem 0.875rem"
+    rounded: "{rounded.field}"
+    padding: "0.75rem 1.25rem"
   option:
     textColor: "{colors.ink-2}"
-    rounded: "{rounded.control}"
-    padding: "0.5rem 0.75rem"
+    rounded: "{rounded.pill}"
+    padding: "0.5rem 1rem"
     height: "2.875rem"
   option-checked:
     backgroundColor: "{colors.surface-2}"
@@ -387,13 +387,15 @@ Squircles. Every rounded corner uses `corner-shape: squircle` with a plain `bord
 
 Pills (the toast and its action) use an infinite radius with `corner-shape: superellipse(1.5)` (the `squircle-full` utility). Small round parts (the close disc, the sheet handle, the habit page's skeleton name bar) use a plain 999px radius.
 
-The radius scale, as fallback values: the gauge is 19% of its side, an icon tile 18% of its side, a control 0.625rem, a lifted row 0.75rem, a stepper and a popover 0.875rem, a dialog 1rem, a bottom sheet 1.25rem. Larger containers get larger radii.
+The controls inside a sheet are capsules, as the dock is: buttons, fields, segmented controls, steppers, options, the icon tile and the cells of the pickers take a plain 999px radius (`rounded-full`). The large corners of a sheet, concentric with the display's in the installed app, made the 0.625rem squircles inside look boxy. A field of several lines takes 1.5rem, the curve of a 3rem field, so its corners match the one-line fields. The color swatches stay squircles: each one is a small Day.
+
+The radius scale, as fallback values: the gauge is 19% of its side, an icon tile 18% of its side, a control on the ground (the habit page's controls) 0.625rem, a lifted row 0.75rem, a popover 0.875rem, a dialog 1rem, a bottom sheet 1.25rem. Larger containers get larger radii.
 
 There are no structural borders. A frame is an inset ring: 1.5px (0.09375rem) by default, thinner for small gauges through `--ds-frame`. The habit page draws its gauges without a frame: the calendar fills its Days (`look="fill"`) and the year grid colors them flat (`look="flat"`); an empty Day is a `tile`. A calendar Day has a notch at its top left that holds its date, a mask on the square, so the fill never runs under a digit. A dashed 1px border marks something that does not exist yet: the ghost gauge, in `line`.
 
 ### Named Rules
 
-**The Squircle Rule.** No rounded corner without `corner-shape: squircle` and the 1.75 multiplier where it is supported. A hard-coded radius alone looks too tight in a browser that draws superellipses.
+**The Squircle Rule.** No rounded corner without `corner-shape: squircle` and the 1.75 multiplier where it is supported. A hard-coded radius alone looks too tight in a browser that draws superellipses. Capsules and circles are the exception: their radius is half their height.
 
 **The Dashed Means Not Yet Rule.** A dashed outline means "this does not exist yet", as in the ghost gauge on the page of a missing habit. Nothing else is dashed.
 
@@ -462,38 +464,38 @@ Empty and zero are both "frame only", but they differ: a recorded zero is data a
 
 One component for every form and input: `ResponsiveSheet` from `@/components/sheet`. It is a bottom sheet on a phone, and on a desktop a centered dialog or a popover at an element.
 
-- **Bottom sheet (phone):** `surface`, a 1.25rem squircle radius, at most 30rem wide. It floats 0.5rem above the bottom edge and the home indicator. In the installed app it sits 0.5rem from the screen's bottom edge, over the home indicator, with its content padded clear of it, and all four of its corners are concentric with the display's: the display's radius less 0.5rem (a table by screen size, `components/sheet-viewport.ts`), as a floating sheet of iOS 26. The corners are always equal: a large bottom with a small top looked wrong. A Home Screen app with a toolbar under the page does not count as installed here: the page must reach the screen's bottom edge. With a software keyboard up it sits 0.5rem above the keyboard, at most as tall as the visible part of the screen less 1rem, and its content scrolls inside it. A handle (2.25rem by 0.3125rem, `line-strong`, pill) floats 0.5rem from the top, out of the flow, so the header sits where it does in a dialog. The handle and the header stay at the top and the footer at the bottom: only the body between them scrolls. A swipe down dismisses it. It enters with the sheet spring on `translateY`, and leaves in 400ms times the swipe strength with `--ease-drawer`. The scrim fades in 400ms with `--ease-drawer` and follows the swipe. It reaches the browser's bars too: the installed app's status bar takes the scrim through `theme-color`, and Safari's bars through two hidden bands at the top and the bottom edge (`docs/notes/web-sheet.md`).
+- **Bottom sheet (phone):** `surface`, a 1.25rem squircle radius, at most 30rem wide. It floats 0.5rem above the bottom edge and the home indicator. In the installed app it sits 0.5rem from the screen's bottom edge, over the home indicator, with its content padded clear of it, and all four of its corners are concentric with the display's: the display's radius less 0.5rem (a table by screen size, `components/sheet-viewport.ts`), as a floating sheet of iOS 26. The corners are always equal: a large bottom with a small top looked wrong. A Home Screen app with a toolbar under the page does not count as installed here: the page must reach the screen's bottom edge. With a software keyboard up it sits 0.5rem above the keyboard, at most as tall as the visible part of the screen less 1rem, and its content scrolls inside it. A handle (2.25rem by 0.3125rem, `line-strong`, pill) floats 0.5rem from the top, out of the flow, so the header sits where it does in a dialog. The handle and the header stay at the top and the footer at the bottom: only the body between them scrolls. A swipe down dismisses it. It enters with the open spring on `translateY`, and leaves in 260ms times the swipe strength with `--ease-drawer`. The scrim fades in 260ms with `--ease-drawer` and follows the swipe. It reaches the browser's bars too: the installed app's status bar takes the scrim through `theme-color`, and Safari's bars through two hidden bands at the top and the bottom edge (`docs/notes/web-sheet.md`).
 - **Dialog (desktop):** `surface`, a 1rem squircle radius, 22rem wide, centered. It enters and leaves with a fade and a scale from 0.96 in 200ms with `--ease-out`.
 - **Popover (desktop):** `surface`, a 0.875rem squircle radius, 17rem wide, 10px below its anchor, 16px from the window edges. It scales from 0.96 at the anchor side with a fade in 180ms.
-- **Header:** the close button's disc sits 1.25rem from the top and from the side, as far as the content is from the edge, in all three forms. Larger corners move it in, so it stays clear of the curve: the header's inset is 30% of the corner radius, at least 0.75rem (the disc sits 1.5rem in at the 54px corners of a 17 Pro). The title (Title type; an entry input puts the habit icon at 1.25rem before it) is centered on the disc, and an optional description in `ink-3` goes under the title. The close button is a 44px target around a 28px `surface-2` disc, with a bold Phosphor X in `ink-3`. Under a fine pointer and while pressed the disc turns `surface-3` and the X `ink`, as the other buttons of a sheet do; a press scales it to 0.96.
+- **Header:** the close button's disc sits 1.25rem from the top and from the side, as far as the content is from the edge, in all three forms. Larger corners move it in, so it stays clear of the curve: the header's inset is 30% of the corner radius, at least 0.75rem (the disc sits 1.5rem in at the 54px corners of a 17 Pro). The title (Title type; an entry input puts the habit icon at 1.25rem before it) is centered on the sheet, as on iOS, and level with the disc; an empty cell as wide as the close target balances the disc on the left, so a long title ends before it on both sides. An optional description in `ink-3` is centered under the title. A title at the left edge sat in the curve of the large corners. The close button is a 44px target around a 28px `surface-2` disc, with a bold Phosphor X in `ink-3`. Under a fine pointer and while pressed the disc turns `surface-3` and the X `ink`, as the other buttons of a sheet do; a press scales it to 0.96.
 - **Body:** 0.75rem top padding, 1.25rem on the sides and the bottom.
 - **Height:** the content morphs its height with the morph spring, so a sheet grows and shrinks between steps instead of jumping.
 - **Footer:** the buttons that end a sheet (`footer`) sit under the content, outside the part whose height morphs. On a phone they stay where they are while a step or a field above them changes, and they are outside the part that scrolls; in a dialog they move with its bottom edge, and while a long step scrolls they stick to the bottom. What scrolls under them is cut at the top edge of the button, with no fade. The body's bottom padding is the gap above them at the end of the scroll.
-- **A sheet over a sheet (phone):** the icon picker opens as a second bottom sheet over the habit form (a Base UI nested drawer), as a sheet under a sheet on iOS. It adds no scrim of its own. The form steps back with the sheet spring: it scales to 0.94 from its top edge, dims (brightness 0.9, 0.6 in the dark theme), hides its handle, and rises until its top edge shows 0.625rem above the picker; the picker is at most that much shorter than a sheet can be, so it never covers that edge. A swipe down on the picker closes only the picker, and the form follows the finger back. On a desktop the picker is a second dialog, and the one under it scales to 0.96 and dims.
+- **A sheet over a sheet (phone):** the icon picker opens as a second bottom sheet over the habit form (a Base UI nested drawer), as a sheet under a sheet on iOS. It adds no scrim of its own. It is a quick step inside the form: it comes up with the stack spring and leaves in 160ms times the swipe strength, and the form steps back with the same spring: it scales to 0.94 from its top edge, dims (brightness 0.9, 0.6 in the dark theme), hides its handle, and rises until its top edge shows 0.625rem above the picker; the picker is at most that much shorter than a sheet can be, so it never covers that edge. A swipe down on the picker closes only the picker, and the form follows the finger back. On a desktop the picker is a second dialog that enters and leaves in 140ms, and the one under it scales to 0.96 and dims.
 - **Reduced motion:** a 180ms fade replaces the slide and the scale; a swipe still follows the finger; the height changes at once.
 - **No save button:** each change applies at once.
 
 ### Buttons
 
-- **Shape:** a 0.625rem squircle radius; 2.75rem tall.
-- **Default:** `surface-2` fill, `ink` text, Control type, 0 1rem padding. An optional icon sits 0.375rem from the label.
+- **Shape:** a capsule (999px radius); 2.75rem tall.
+- **Default:** `surface-2` fill, `ink` text, Control type, 0 1.25rem padding. An optional icon sits 0.375rem from the label.
 - **Hover / Press:** `surface-3` fill under a fine pointer and while pressed; a press scales to 0.97 in 120ms.
 - **Disabled:** `ink-4` text at 60% opacity.
 - **Destructive:** "Delete habit". 12% of `destructive` mixed into `surface` (18% under a fine pointer and while pressed), and the text 70% `destructive` mixed with `ink`, so it keeps its contrast in both themes.
 - **Focus:** the global focus ring, 2px solid `ink-3`, 2px out.
-- **Stepper:** the −Step and +Step buttons of a number input. At least 3.5rem square, a 0.875rem squircle radius, `surface-2`, 1.0625rem at 600 with tabular figures. A press scales to 0.95 on `surface-3`.
+- **Stepper:** the −Step and +Step buttons of a number input. At least 3.5rem square, a circle (a capsule when its label is wider), `surface-2`, 1.0625rem at 600 with tabular figures. A press scales to 0.95 on `surface-3`.
 
 ### Inputs / Fields
 
 - **Number field:** Display type in `ink`, centered, transparent, with no border and no outline. The placeholder is `ink-3`. A caption in `ink-3` sits under it. The field applies a typed value after a 700ms pause, on Enter, and on blur.
-- **Text field:** a `field` fill, `ink` text, a 0.625rem squircle radius, 0.75rem by 0.875rem padding. At least 5.5rem tall; it grows with its content (`field-sizing: content`) up to 40% of the viewport height. No resize handle.
+- **Text field:** a `field` fill, `ink` text, a 1.5rem radius (the curve of a one-line field), 0.75rem by 1.25rem padding. At least 5.5rem tall; it grows with its content (`field-sizing: content`) up to 40% of the viewport height. No resize handle.
 - **Focus:** a text field shows an inset 1.5px ring in `ink-4`. Other controls use the global focus ring.
 
 ### Option list
 
 The Options of a choice or a scale Day, as a radio list.
 
-- **Option:** at least 2.875rem tall, 0.5rem by 0.75rem padding, a 0.625rem squircle radius, Body type at 500 in `ink-2`. The label wraps to two lines, then ends with an ellipsis.
+- **Option:** at least 2.875rem tall, 0.5rem by 1rem padding, a 1.4375rem radius (a capsule at one line), Body type at 500 in `ink-2`. The label wraps to two lines, then ends with an ellipsis.
 - **Leading mark:** a choice shows its emoji in a 1.25rem box. A scale shows a 1.25rem gauge at the Option's level, from the lightest to full.
 - **Checked:** `surface-2` fill, `ink` text, and a bold Phosphor check at the end that fades in and grows from 0.9 in 160ms.
 - **Hover / Press:** `surface-2` under a fine pointer; a press scales to 0.985.
@@ -515,9 +517,9 @@ The create sheet (`?new=true`) and the edit sheet (`?edit=<id>`), in `features/h
 
 - **Two columns (960px and more):** the dialog is 44.5rem wide, with two columns of 20rem, 2rem apart: what the habit looks like (the icon and the name, the description, the color) at the left, and how it is tracked (the Direction, the Kind and its fields) at the right. So the form fits a 1280×800 window without a scroll. The footer button runs under both columns, and so does "Delete habit" in the edit sheet. In the lab's "Inline" place, a picker unfolds in its own column, with the search over the Icons or Emoji tabs. A narrower window keeps one column.
 - **Steps:** create is one step: the icon and the name, the description, the color, the Direction and the Kind, and under them the fields of a number, choice or scale habit. When the Kind changes, its fields move as the steps do: the new ones come in from the side where the new Kind lies in the segmented control, and the old ones leave to the other side; a Kind without fields only lets the old ones leave. Under reduced motion they crossfade. A choice and a scale share their Options, so between them the rows stay: what a scale adds moves instead (see Options). The pickers are not steps (see Icon picker).
-- **Icon tile:** before the name, as tall as the name field: 3.25rem, a 0.625rem squircle, the habit icon at 1.75rem on 16% of the habit color mixed into `surface` (in OKLab: an OKLCH mix turns the tint pink on white). The tint rises from the bottom like a Day, with the fill spring and the gauge's pulse, when the create sheet opens (after 220ms, so the sheet has come up) and when the color changes. A new icon crossfades from 0.9 with a 2px blur.
-- **Fields:** the field fill, a 0.625rem squircle, 3rem tall (the name and the description 3.25rem, as tall as the icon tile; the name at Title type), 0.875rem side padding, the `ink-4` inset ring on focus. A label above a field is 0.875rem at 500 in `ink-3`. The color, the Kind and the Direction have no visible label: their content says what they are, and a screen reader still reads one.
-- **Segmented control:** a radio group on a `surface-2` track with a 0.125rem inset; the chosen segment gets a pill (`surface`, `surface-3` in the dark theme) that slides with the lift spring. The Kind segments put a bold Phosphor icon over a Caption label. The Direction segments put the label over a short line in `ink-3` that says what it means ("Do more", "Do less"), so both controls are 3.5rem tall.
+- **Icon tile:** before the name, as tall as the name field: a 3.25rem circle, the habit icon at 1.75rem on 16% of the habit color mixed into `surface` (in OKLab: an OKLCH mix turns the tint pink on white). The tint rises from the bottom like a Day, with the fill spring and the gauge's pulse, when the create sheet opens (after 220ms, so the sheet has come up) and when the color changes. A new icon crossfades from 0.9 with a 2px blur.
+- **Fields:** the field fill, a capsule, 3rem tall (the name and the description 3.25rem, as tall as the icon tile; the name at Title type), 1.25rem side padding, the `ink-4` inset ring on focus. A label above a field is 0.875rem at 500 in `ink-3`. The color, the Kind and the Direction have no visible label: their content says what they are, and a screen reader still reads one.
+- **Segmented control:** a radio group on a `surface-2` capsule track with a 0.125rem inset; the chosen segment gets a pill (`surface`, `surface-3` in the dark theme) that slides with the lift spring. The Kind segments put a bold Phosphor icon over a Caption label. The Direction segments put the label over a short line in `ink-3` that says what it means ("Do more", "Do less"), so both controls are 3.5rem tall.
 - **Color swatches:** the 16 colors, 8 on a row, each a 72% squircle in its cell. The chosen one gets a 4px ring of its color at 50%, with no gap, and a bold check in `ground`.
 - **Primary button:** one per step, the action that ends it ("Add habit"): `ink` fill, `ground` text, full width, otherwise the default button.
 - **Footer button:** the create sheet has one button in its footer, "Add habit", so it never moves. (In the lab's "Step" place of the pickers it becomes the quiet "Back" under a picker.) Its fill and text color change in 200ms. Its label rolls: going to a picker, the old label leaves 12px upward and the new one comes from 12px below; going back, the other way round. The label that leaves fades in 140ms with a 2px blur; the new one comes in with the morph spring and a 220ms fade. Under reduced motion the label crossfades.
@@ -537,7 +539,7 @@ The page of one habit (`/habits/$habitId`), in `features/habit-page/`.
 - **Calendar:** the weekday letters, then the Days in 7 columns, one row for each week of the Month, then the controls right under the last row, near the thumb: the name of the Month as plain text (0.9375rem at 600 in `ink`, with a bold caret in `ink-3`; it opens the picker), "Today" (only when another Month shows) and two carets. The first and the last square meet the gutters: the room between the squares is shared out evenly, each column is a square and a gap wide, and each weekday letter stands over the middle of its square.
 - **The controls** share one look: plain at rest, and a 0.625rem squircle of 6% `ink`, with the text in `ink`, under a fine pointer and while pressed; a disabled caret takes neither. The name of the Month presses to 0.97, "Today" and the carets to 0.96. The fill of the name starts on the left gutter and the fill of the last caret ends on the right one, as Back and Edit do, so the name's text sits 0.625rem in. A Day is a gauge of up to 3rem, never wider than its column less 0.5rem, with a notch at its top left (47.5% of the side wide, 37.5% high, its corners rounded) that holds the date: 27% of the side, at 600, tabular, `ink-2`. Today has its date in `ink` at 750, and no ring. A Day after today has no square, only its date in `ink-4` at 50%. A choice shows its emoji in the middle of what the notch leaves. The Day under edit gets its ring on a box around the square, since the mask of the notch would cut a ring on the square itself.
 - **Height:** the calendar is as tall as the weeks of its Month. Between two Months with different counts of weeks, the height follows the track: it moves with the finger and settles with the same spring. A change from the keyboard, or under reduced motion, changes it at once.
-- **Month picker:** `?monthPicker=true`, a bottom sheet on a phone and a popover at the name of the Month on a desktop, with the shown Month as its title. Two columns, 2fr and 1fr: the months of a year two to a row, by their short names (Jan to Dec), and the years beside them, the newest at the bottom, level with the last row of months; older years scroll up, and the top edge fades while there are more. The years go back to the habit's creation, and at least two years before this one. Each cell is 2.75rem tall, 0.9375rem at 500 in `ink-2`, with a 0.625rem squircle; the shown Month and the chosen year take `surface-2` and `ink` at 600; a month after this one is `ink-4` at 45% and does not take a tap. Under a fine pointer and while pressed a cell takes `surface-3`; a press scales it to 0.97. A year changes the months on show and keeps the picker open; a month moves the calendar there and closes the picker.
+- **Month picker:** `?monthPicker=true`, a bottom sheet on a phone and a popover at the name of the Month on a desktop, with the shown Month as its title. Two columns, 2fr and 1fr: the months of a year two to a row, by their short names (Jan to Dec), and the years beside them, the newest at the bottom, level with the last row of months; older years scroll up, and the top edge fades while there are more. The years go back to the habit's creation, and at least two years before this one. Each cell is a 2.75rem capsule, 0.9375rem at 500 in `ink-2`; the shown Month and the chosen year take `surface-2` and `ink` at 600; a month after this one is `ink-4` at 45% and does not take a tap. Under a fine pointer and while pressed a cell takes `surface-3`; a press scales it to 0.97. A year changes the months on show and keeps the picker open; a month moves the calendar there and closes the picker.
 - **Two ways to another Month, in the lab for now:** the lab's "Month picker" choice (`month-picker`) switches between the zoom below ("Zoom out", the default and what a production build gets) and the picker above ("Sheet"). Both stay in the code while the zoom is still being tuned.
 - **Zoom out to the months:** with "Zoom out", the name of the Month zooms the calendar out in place, with no sheet and no overlay, on a phone and on a desktop alike, and no URL. In place of the Days come the 12 months of the Month's year, four to a row with a 0.875rem gap: each a button with its short name (0.8125rem at 500 in `ink-2`, at the left) over a small calendar of flat squares (the year grid's look, a 0.125rem gap, 7 columns, 6 rows kept, Monday first). A small calendar is as wide as its column, so its squares grow with the screen (about 0.625rem on a 402px phone), and the first and the last of a row meet the gutters, as the Days and the grid above do. The open Month has no fill: only its name, in `ink` at 600, tells it; a month after this one has a faint name, no squares, and takes no tap; under a fine pointer a month, the open one too, takes 6% of `ink` (a 0.75rem squircle), and a press scales it to 0.97. The label reads the year; the arrows, a horizontal swipe and a trackpad swipe flip the year, within the picker's range of years; "Today" hides. A tap on a month zooms into its Days at once, without the slide of the paging. The label, or Escape, zooms back into the open Month when the year on show has it, else into the same month of that year, never past this one.
 - **The zoom's motion:** on the morph spring, from `morphTiming`. Out: the Days scale uniformly from their top left onto the open Month's small calendar, their first and last squares onto its first and last, and fade between 30% and 70% of the motion; that month's name and squares fade in from 45%; the other months fade in and grow from 0.9, the nearest first (0.6 of the motion, after 18% plus 4.5% for each step away); the weekday letters fade in the first quarter; the label crossfades; the height of the calendar follows. In: the same in reverse onto the tapped month's full calendar. A flip of the year brings the months in from 1.5rem on its side. The calendar takes no input while a zoom runs. Focus goes to the open Month on the way out, and back to the Day that had it (or the label) on the way in. Under reduced motion the two levels crossfade in 180ms.
@@ -545,7 +547,7 @@ The page of one habit (`/habits/$habitId`), in `features/habit-page/`.
 - **Hold:** a Day presses to 0.95 in 120ms; a hold adds a linear shrink on `scale`, to 0.9 in all, over the time to the paint (200ms) or the input (450ms).
 - **From the list and back (phone):** a push, as in a native app (a view transition, `features/screens/screen-transition.ts`). The page slides in from the right over the list, and the list moves 30% of its width to the left and dims (`brightness` 0.9 in the light theme, 0.6 in the dark). Both move in 420ms on `--ease-drawer`, so no gap opens between them. Back plays the reverse with the page on top, from the Back button and from the browser's back and forward, unless the browser animates the change itself (the back swipe on iOS, `hasUAVisualTransition`). A finger that lands during it ends it, and its tap goes to the screen under it. Under reduced motion the screens crossfade in 180ms. A browser without view transition types crossfades in 200ms.
 - **Beside the list (wide):** the list moves aside with the sheet spring and keeps its left edge: its column narrows to the next step, which cuts off what it drops, while its old and new pictures cross in 240ms. The page comes from the right with it, from as far as the list moves plus 1.5rem, and fades in over 300ms. Back plays it in reverse, the page fading in 200ms. Another habit crossfades the pages in 200ms. The title does not move. Under reduced motion nothing moves, and the page fades in 180ms.
-- **Under edit, on a phone:** the page rises with the sheet spring until the Day is 16px above the input sheet, and comes back when the sheet closes.
+- **Under edit, on a phone:** the page rises with the open spring, in step with the input sheet, until the Day is 16px above the input sheet, and comes back when the sheet closes.
 - **Empty state:** a ghost gauge, "This habit is not here" (Title type), a line in `ink-3`, and a "Back to habits" button.
 
 ### Settings
@@ -572,9 +574,9 @@ The screens of `features/auth/`. `AuthGate` in the root route shows the app to t
 
 All motion comes from the presets in `@/components/motion`, after Family: springs that settle quickly, a short overshoot when a value rises, and sheets that change their height instead of cutting.
 
-- **Springs (Motion):** fill (visual duration 0.38s, bounce 0.24), sheet (0.42s, bounce 0.1), morph (0.34s, bounce 0.12), and pulse (stiffness 600, damping 18, mass 1, start velocity 1.6, a peak of about 1.04). `installCssSprings()` puts the fill and sheet springs on the document as `--spring-fill` and `--spring-sheet` (`linear()` easings), so CSS and JS motion match. The sheet spring also comes in parts, `--spring-sheet-duration` and `--spring-sheet-easing`, for a view transition's group, whose animation has no author name.
+- **Springs (Motion):** fill (visual duration 0.38s, bounce 0.24), sheet (0.42s, bounce 0.1; a page that moves), open (0.3s, bounce 0.08; a bottom sheet that comes up), stack (0.18s, no bounce; a sheet over a sheet), morph (0.34s, bounce 0.12), and pulse (stiffness 600, damping 18, mass 1, start velocity 1.6, a peak of about 1.04). `installCssSprings()` puts the fill, sheet, open and stack springs on the document as `--spring-fill`, `--spring-sheet`, `--spring-open` and `--spring-stack` (`linear()` easings), so CSS and JS motion match. The sheet spring also comes in parts, `--spring-sheet-duration` and `--spring-sheet-easing`, for a view transition's group, whose animation has no author name.
 - **Curves:** `--ease-out` (`cubic-bezier(0.23, 1, 0.32, 1)`) for every plain transition; `--ease-drawer` (`cubic-bezier(0.32, 0.72, 0, 1)`) for the bottom sheet and its scrim.
-- **Durations:** a press 120ms; a color change 120ms; a check mark or a frame 160ms; a popover 180ms; a dialog, a drain and a reorder 200ms; the sheet scrim 400ms.
+- **Durations:** a press 120ms; a color change 120ms; a check mark or a frame 160ms; a popover 180ms; a dialog, a drain and a reorder 200ms; a bottom sheet that leaves, and its scrim, 260ms; a sheet over a sheet that leaves 160ms.
 - **Presses:** larger elements press less. A Day and a stepper press to 0.95, the close button, the toast action and a tab of the dock to 0.96, "New habit" to 0.94, a button to 0.97, an option to 0.985.
 - **Reduced motion:** a fade replaces each movement (180ms with `--ease-out`). Components read `useReducedMotion()` and drop transforms. A swipe still follows the finger.
 
@@ -589,7 +591,7 @@ All motion comes from the presets in `@/components/motion`, after Family: spring
 ### Do:
 - **Do** put a habit's color in scope with `habitColorStyle(color)` (`--c`) and draw from it: the gauge, the icon, `text-habit`, `bg-habit`, `border-habit`.
 - **Do** use `DaySquare` for every Day on every screen, in your own button with a touch target of about 44px. Set `animated={false}` for a large static grid and a thinner `--ds-frame` (0.0625rem) for a small square.
-- **Do** round every corner with `corner-shape: squircle` and the 1.75 multiplier: the `squircle-*` utility, or `calc(<radius> * var(--squircle-k))`.
+- **Do** round every corner with `corner-shape: squircle` and the 1.75 multiplier: the `squircle-*` utility, or `calc(<radius> * var(--squircle-k))`. Make a control inside a sheet a capsule (`rounded-full`).
 - **Do** write measures in rem, so the desktop's 20px base scales them, and keep the content in the 600px column.
 - **Do** set text in the four inks: `ink` for primary text, `ink-2` for habit names, `ink-3` for secondary text and the day header, `ink-4` for disabled controls.
 - **Do** open every form and input with `ResponsiveSheet`: a bottom sheet on a phone, a dialog or a popover at 640px and more.
@@ -603,7 +605,7 @@ All motion comes from the presets in `@/components/motion`, after Family: spring
 - **Don't** give anything that sits on the ground a drop shadow, the toast included. Shadows are for overlays and the lifted row.
 - **Don't** show a Day's state by color alone: an empty Day is a frame, a filled Day has a fill.
 - **Don't** pulse or bounce on a fall. A drain is 200ms with `--ease-out`.
-- **Don't** hard-code a radius without the squircle multiplier.
+- **Don't** hard-code a radius without the squircle multiplier, except the half-height radius of a capsule or a circle.
 - **Don't** add a second type family (IBM Plex Mono is the family's own mono, for code to copy only), uppercase eyebrows or kickers, or letter-spaced labels.
 - **Don't** set the text of a field under 16px.
 - **Don't** style a quit habit differently from a build habit, and don't draw streaks, percentages or badges.

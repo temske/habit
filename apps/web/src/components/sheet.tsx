@@ -169,7 +169,7 @@ function CenteredDialog({
     >
       <Dialog.Portal>
         {nested ? null : <Dialog.Backdrop className="dialog-backdrop" />}
-        <Dialog.Viewport className="dialog-viewport">
+        <Dialog.Viewport className="dialog-viewport" data-nested={nested ? "" : undefined}>
           <Dialog.Popup
             className={cn("dialog-popup", className)}
             {...(initialFocus === undefined ? {} : { initialFocus })}

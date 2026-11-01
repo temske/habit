@@ -221,7 +221,7 @@ export function OptionsEditor(props: OptionsEditorProps) {
         <button
           type="button"
           onClick={add}
-          className="flex h-11 w-full items-center gap-2 squircle-[0.625rem] px-3.5 text-[1rem] font-medium text-ink-2 transition-[background-color,scale] duration-150 ease-out hover:bg-surface-2 active:scale-[0.98]"
+          className="flex h-11 w-full items-center gap-2 rounded-full px-4 text-[1rem] font-medium text-ink-2 transition-[background-color,scale] duration-150 ease-out hover:bg-surface-2 active:scale-[0.98]"
         >
           <PlusIcon weight="bold" aria-hidden className="size-4" />
           Add option
@@ -325,11 +325,7 @@ function OptionRow({
         style={{ transform: CSS.Translate.toString(transform), transition }}
         className={cn("relative pb-2", isDragging && "z-10")}
       >
-        <motion.div
-          ref={swipe.container}
-          style={{ overflow }}
-          className="relative squircle-[0.875rem]"
-        >
+        <motion.div ref={swipe.container} style={{ overflow }} className="relative rounded-full">
           {gestures && canRemove ? (
             <SwipeAction x={swipe.x} onRemove={() => onRemove(option.id)} />
           ) : null}
@@ -337,7 +333,7 @@ function OptionRow({
             style={{ x: swipe.x }}
             {...swipe.handlers}
             className={cn(
-              "relative flex items-center gap-2 squircle-[0.875rem] bg-surface transition-[box-shadow] duration-150",
+              "relative flex items-center gap-2 rounded-full bg-surface transition-[box-shadow] duration-150",
               gestures && "touch-pan-y",
               isDragging && "shadow-[var(--elevation)]",
             )}
@@ -556,7 +552,7 @@ function EmojiButton({
       aria-label={emoji === undefined ? `Emoji for ${label}` : `Emoji for ${label}: ${emoji}`}
       aria-expanded={expanded}
       style={habitColorStyle(color)}
-      className="grid size-12 flex-none place-items-center squircle-[0.625rem] bg-field text-[1.0625rem] outline-none transition-[box-shadow,scale] duration-150 ease-out active:scale-[0.95] focus-visible:shadow-[inset_0_0_0_0.09375rem_var(--ink-4)] aria-expanded:shadow-[0_0_0_0.25rem_color-mix(in_oklab,var(--c)_50%,transparent)]"
+      className="grid size-12 flex-none place-items-center rounded-full bg-field text-[1.0625rem] outline-none transition-[box-shadow,scale] duration-150 ease-out active:scale-[0.95] focus-visible:shadow-[inset_0_0_0_0.09375rem_var(--ink-4)] aria-expanded:shadow-[0_0_0_0.25rem_color-mix(in_oklab,var(--c)_50%,transparent)]"
     >
       {emoji ?? <SmileyIcon aria-hidden className="size-5 text-ink-3" />}
     </button>
@@ -574,7 +570,7 @@ function SwipeAction({ x, onRemove }: { x: MotionValue<number>; onRemove: () => 
     <motion.div
       aria-hidden
       style={{ opacity }}
-      className="absolute inset-0 flex justify-end squircle-[0.875rem] bg-[color-mix(in_oklab,var(--destructive)_12%,var(--surface))]"
+      className="absolute inset-0 flex justify-end rounded-full bg-[color-mix(in_oklab,var(--destructive)_12%,var(--surface))]"
     >
       <motion.button
         type="button"
@@ -624,7 +620,7 @@ function RetiredOptions({
                   onClick={() => onRestore(option.id)}
                   disabled={!canRestore}
                   aria-label={`Restore ${option.label}`}
-                  className="flex h-9 flex-none items-center gap-1.5 squircle-[0.625rem] bg-surface-2 px-3 text-[0.9375rem] font-medium text-ink-2 transition-[color,scale,opacity] duration-150 ease-out hover:text-ink active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100"
+                  className="flex h-9 flex-none items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-[0.9375rem] font-medium text-ink-2 transition-[color,scale,opacity] duration-150 ease-out hover:text-ink active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100"
                 >
                   <ArrowCounterClockwiseIcon weight="bold" aria-hidden />
                   Restore

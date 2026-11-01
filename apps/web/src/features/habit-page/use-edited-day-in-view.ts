@@ -52,7 +52,8 @@ export function useEditedDayInView(page: RefObject<HTMLElement | null>, habitId:
       window.addEventListener("wheel", stop, { passive: true });
       window.addEventListener("touchstart", stop, { passive: true });
       scroll.current = animate(window.scrollY, top, {
-        ...springs.sheet,
+        // In step with the input sheet, which comes up with the open spring.
+        ...springs.open,
         onUpdate: (y) => window.scrollTo(0, y),
         onComplete: detach,
       });
