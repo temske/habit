@@ -501,6 +501,25 @@
     bottom: 0;
   }
 
+  /* The top edge of every screen: a band of the ground, fixed, as wide as the page and 1rem high.
+     iOS 26 draws a band under the top edge of the page, and WebKit picks its look from the fixed or
+     sticky element at that edge: its color when there is one, and a blur of the content when there
+     is none. The list has its sticky day header and the settings had nothing, so after a visit to
+     the settings the band could stay a blur over the list's weekday letters. With this band the
+     edge is always the ground. Hidden and let through as `.sheet-edge` is; under the scrim (50),
+     so an open sheet's own edge (53) wins. */
+  .page-edge {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 49;
+    height: 1rem;
+    background: var(--ground);
+    filter: opacity(0);
+    pointer-events: none;
+  }
+
   /* The visible band of the screen. With a software keyboard up it is the part above the keyboard,
      which iOS may pan inside the page (sheet-viewport.ts writes the two distances). The sheet sits
      at its bottom, 0.5rem from the edges. */

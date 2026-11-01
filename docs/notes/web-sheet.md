@@ -125,6 +125,21 @@ during a swipe of the sheet in front, `--drawer-swipe-progress`. With them, `.sh
 and comes back in step with the swipe. The nested viewport leaves 0.625rem more room at the top,
 so the sheet in front never covers that edge, even when both are as tall as they can be.
 
+## The top edge of a screen
+
+iOS 26 draws a band under the top edge of the page. The owner saw it in the installed app as a
+blur over the list's weekday letters, after a visit to the settings and back. Nothing in the app
+blurs the top.
+
+The likely cause, not checked on a device: WebKit picks the band's look from the fixed or sticky
+element at the top edge, as it picks the color of Safari's bars (above). The list has its sticky
+day header, so the band takes its color. The settings have nothing at the top, so the band turns to
+a blur of the content, and it stays a blur when the list comes back, until WebKit looks again.
+
+The fix: `.page-edge`, a band of the ground fixed at the top of every screen, 1rem high and as wide
+as the page, hidden and let through as `.sheet-edge` is. The top edge is then the same on every
+screen. It is under the scrim (z-index 49), so an open sheet's own band still wins.
+
 ## Checks
 
 - `components/sheet-viewport.test.ts`: the keyboard band, the pan, the pinch zoom, the corner
@@ -165,3 +180,5 @@ so the sheet in front never covers that edge, even when both are as tall as they
    and the form grows back with the finger. Do the same with an Option's emoji in "Edit".
 10. A long sheet (the edit sheet of a choice habit): scroll it. The handle and the header stay at
     the top.
+11. Installed app: scroll the list a little, open the settings, and go back to the habits. The
+    weekday letters at the top must stay sharp, with no blur over them.
