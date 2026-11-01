@@ -118,19 +118,33 @@ function readMetrics(): ViewportMetrics {
   };
 }
 
+/** How long the band is measured again at each frame after a change, in ms. */
+const SETTLE_MS = 700;
+
 /**
  * Keeps the sheet's viewport element on the visible band while a keyboard is up, and marks it when
  * the sheet touches the screen's bottom edge. Writes `--sheet-vv-top`, `--sheet-vv-bottom`,
  * `data-keyboard`, `data-hug` and `--display-radius`, synchronously in the viewport events, so Base
  * UI's keyboard alignment (a frame later) measures the moved sheet.
  *
+ * In the owner's screenshot the sheet sat 34pt above the keyboard with its top off the screen:
+ * iOS had panned the visual viewport further than the last pan this read. The likely cause, not
+ * checked on a device: iOS moves it again after the event that started the move, with no event of
+ * its own, for example when the keyboard's arrows move the focus and Base UI scrolls the window
+ * back. So after each change of the viewport, of the window's scroll or of the focus, the band is
+ * measured again at every frame for a short while; a frame that finds no change writes nothing.
+ *
  * A ref callback: React calls the returned cleanup when the element goes.
  */
 export function trackSheetViewport(element: HTMLElement | null): (() => void) | undefined {
   if (element === null) return undefined;
 
+  let last = "";
   const update = () => {
     const { keyboard, hug } = sheetViewportState(readMetrics());
+    const key = `${keyboard?.top}/${keyboard?.bottom}/${hug}`;
+    if (key === last) return;
+    last = key;
     if (keyboard === null) {
       element.style.removeProperty("--sheet-vv-top");
       element.style.removeProperty("--sheet-vv-bottom");
@@ -149,14 +163,34 @@ export function trackSheetViewport(element: HTMLElement | null): (() => void) | 
     }
   };
 
+  let frame = 0;
+  let settleUntil = 0;
+  const tick = () => {
+    frame = 0;
+    update();
+    if (performance.now() < settleUntil) frame = requestAnimationFrame(tick);
+  };
+  const onChange = () => {
+    update();
+    settleUntil = performance.now() + SETTLE_MS;
+    if (frame === 0) frame = requestAnimationFrame(tick);
+  };
+
   update();
   const visual = visualViewport();
-  visual?.addEventListener("resize", update);
-  visual?.addEventListener("scroll", update);
-  window.addEventListener("resize", update);
+  visual?.addEventListener("resize", onChange);
+  visual?.addEventListener("scroll", onChange);
+  window.addEventListener("resize", onChange);
+  window.addEventListener("scroll", onChange, { passive: true });
+  document.addEventListener("focusin", onChange);
+  document.addEventListener("focusout", onChange);
   return () => {
-    visual?.removeEventListener("resize", update);
-    visual?.removeEventListener("scroll", update);
-    window.removeEventListener("resize", update);
+    cancelAnimationFrame(frame);
+    visual?.removeEventListener("resize", onChange);
+    visual?.removeEventListener("scroll", onChange);
+    window.removeEventListener("resize", onChange);
+    window.removeEventListener("scroll", onChange);
+    document.removeEventListener("focusin", onChange);
+    document.removeEventListener("focusout", onChange);
   };
 }
