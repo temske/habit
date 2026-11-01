@@ -1,6 +1,10 @@
 /*
  * The dock (index.tsx): a pill of tabs and the "New habit" circle, over the bottom edge of a
- * top-level screen. The tabs look like the segmented controls of the habit form, in a pill: a
+ * top-level screen. On a phone it is fixed to the bottom of the screen, as the habit page's
+ * buttons are: Safari keeps a fixed element in place while the page's rubber band stretches at the
+ * end of a scroll, where a sticky one moved with the content. A room as tall as the dock at the end
+ * of the screen (`.dock-room`) lets the last row scroll clear of it. On a desktop the window does
+ * not scroll (screens.css), so the dock sticks to the bottom of the list's column. The tabs look like the segmented controls of the habit form, in a pill: a
  * `surface-2` track, and the tab on show raised on it. No shadow under the dock: a band of the
  * ground under it fades out upward, so the content scrolls under the dock but never shows behind
  * it. The band lets taps through; only the controls take them.
@@ -8,17 +12,46 @@
 
 @layer components {
   .dock {
-    position: sticky;
+    position: fixed;
+    right: 0;
     bottom: 0;
+    left: 0;
     z-index: 4;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    margin-top: auto;
+    max-width: 600px;
+    margin: 0 auto;
     padding: 1.5rem var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
     background: linear-gradient(to bottom, transparent, var(--ground) 1.5rem);
     pointer-events: none;
+  }
+
+  /* The room the fixed dock covers, at the end of the screen. */
+  .dock-room {
+    flex: none;
+    height: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+    margin-top: auto;
+  }
+
+  @media (min-width: 40em) {
+    .dock {
+      position: sticky;
+      right: auto;
+      left: auto;
+      max-width: none;
+      margin: 0;
+    }
+
+    .dock-room {
+      display: none;
+    }
+
+    /* The room is gone: the dock itself goes to the bottom of a short list. */
+    .dock-room + .dock {
+      margin-top: auto;
+    }
   }
 
   .dock > * {

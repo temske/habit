@@ -24,8 +24,10 @@ const TABS: {
 /**
  * The dock: the navigation of the app's top level, over the bottom edge of the screen, near the
  * thumb. A pill with a tab for each screen (Habits, Settings), and "New habit" beside it, a circle
- * of `ink`. It is the last thing in its screen and sticks to the bottom of the screen (of the
- * list's column, on a desktop), so the content scrolls under it and fades out above it.
+ * of `ink`. It is the last thing in its screen. On a phone it is fixed to the bottom of the screen,
+ * so the rubber band at the end of a scroll does not move it, and a room as tall as the dock ends
+ * the screen; on a desktop it sticks to the bottom of the list's column. The content scrolls under
+ * it and fades out above it.
  *
  * A tab changes the screen in place, with no entry in the history, so the back gesture never walks
  * through the tabs. The change is a view transition (dock.css): the raised pill slides to the new
@@ -40,39 +42,42 @@ export function Dock({ current, canCreate = true }: { current: DockTab; canCreat
   useDockKeys(current, canCreate);
 
   return (
-    <div className="dock">
-      <nav className="dock-pill dock-tabs" aria-label="Screens">
-        {TABS.map(({ tab, to, label, Icon }) => (
-          <Link
-            key={tab}
-            to={to}
-            replace
-            viewTransition={tabTransition(current, tab)}
-            className="dock-tab"
-            data-tab={tab}
-            aria-current={tab === current ? "page" : undefined}
-            aria-keyshortcuts={tab === "settings" ? "," : undefined}
+    <>
+      <div className="dock-room" aria-hidden />
+      <div className="dock">
+        <nav className="dock-pill dock-tabs" aria-label="Screens">
+          {TABS.map(({ tab, to, label, Icon }) => (
+            <Link
+              key={tab}
+              to={to}
+              replace
+              viewTransition={tabTransition(current, tab)}
+              className="dock-tab"
+              data-tab={tab}
+              aria-current={tab === current ? "page" : undefined}
+              aria-keyshortcuts={tab === "settings" ? "," : undefined}
+            >
+              {tab === current ? <span className="dock-tab-pill" aria-hidden /> : null}
+              <span className="dock-tab-content">
+                <Icon weight={tab === current ? "fill" : "bold"} aria-hidden />
+                <span className="dock-tab-label">{label}</span>
+              </span>
+            </Link>
+          ))}
+        </nav>
+        {canCreate ? (
+          <button
+            type="button"
+            className="dock-create"
+            aria-label="New habit"
+            aria-keyshortcuts="N"
+            onClick={() => openSheet({ new: true })}
           >
-            {tab === current ? <span className="dock-tab-pill" aria-hidden /> : null}
-            <span className="dock-tab-content">
-              <Icon weight={tab === current ? "fill" : "bold"} aria-hidden />
-              <span className="dock-tab-label">{label}</span>
-            </span>
-          </Link>
-        ))}
-      </nav>
-      {canCreate ? (
-        <button
-          type="button"
-          className="dock-create"
-          aria-label="New habit"
-          aria-keyshortcuts="N"
-          onClick={() => openSheet({ new: true })}
-        >
-          <PlusIcon weight="bold" aria-hidden />
-        </button>
-      ) : null}
-    </div>
+            <PlusIcon weight="bold" aria-hidden />
+          </button>
+        ) : null}
+      </div>
+    </>
   );
 }
 
