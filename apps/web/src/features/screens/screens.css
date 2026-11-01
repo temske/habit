@@ -170,6 +170,10 @@
       .screens[data-split] .dock-tabs {
         display: none;
       }
+
+      .screens[data-split] .dock-create {
+        width: 3.5rem;
+      }
     }
   }
 }

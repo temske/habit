@@ -62,13 +62,13 @@
 
   .hp-back {
     flex: none;
-    width: 3.5rem;
+    width: 5.25rem;
     font-size: 1.25rem;
   }
 
   .hp-edit {
     min-width: 0;
-    padding: 0 1.75rem 0 1.5rem;
+    padding: 0 2.5rem 0 2.25rem;
   }
 
   .hp-edit svg {
