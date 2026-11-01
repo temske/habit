@@ -9,12 +9,14 @@ import { useCallback } from "react";
  * - `?edit=<habitId>`: edit a habit.
  * - `?entry=<habitId>:<day>`: the input of a value.
  * - `?monthPicker=true`: the picker of the calendar's Month, on the habit page.
+ * - `?settings=true`: the settings.
  */
 export interface SheetSearch {
   new?: true;
   edit?: HabitId;
   entry?: string;
   monthPicker?: true;
+  settings?: true;
 }
 
 /** The root route's `validateSearch`: keeps the sheet params that are well formed, drops the rest. */
@@ -26,6 +28,7 @@ export function validateSheetSearch(search: Record<string, unknown>): SheetSearc
     result.entry = search.entry;
   }
   if (search.monthPicker === true || search.monthPicker === "true") result.monthPicker = true;
+  if (search.settings === true || search.settings === "true") result.settings = true;
   return result;
 }
 
@@ -57,6 +60,7 @@ const NO_SHEET = {
   edit: undefined,
   entry: undefined,
   monthPicker: undefined,
+  settings: undefined,
 } as const;
 
 /** The sheet params of the current location. */

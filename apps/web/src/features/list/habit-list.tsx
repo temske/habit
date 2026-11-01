@@ -18,6 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import { lastDays, orderBetween, paintAction, tapResult, type Day, type Habit } from "@habit/core";
 import { useEntries, useHabits } from "@habit/data";
+import { GearSixIcon } from "@phosphor-icons/react/dist/csr/GearSix";
 import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
@@ -35,8 +36,9 @@ import { useToday } from "@/features/list/use-today";
 const LIFT_DELAY_MS = 300;
 
 /**
- * The habit list, the main screen: a sticky header of the last Days, a row per habit, and the
- * "New habit" button at the end. No title, no cards, no lines: space separates the rows. With
+ * The habit list, the main screen: a sticky header with the Settings gear and the last Days, a row
+ * per habit, and the dock with "New habit" over the bottom edge, near the thumb. No title, no
+ * cards, no lines: space separates the rows. With
  * `pageOpen`, the page of a habit is open beside the list (a desktop), and a row opens its page in
  * that place.
  */
@@ -53,6 +55,7 @@ export function HabitList({ pageOpen = false }: { pageOpen?: boolean }) {
 
   useEffect(() => preloadHabitIcons(habits.map((habit) => habit.icon)), [habits]);
   useOpenNewWhenEmpty(source !== "none" && habits.length === 0);
+  useListKeys(source !== "none");
   useRowEntrance(rows, habits, source !== "none");
 
   const onTap = useCallback(
@@ -119,7 +122,7 @@ export function HabitList({ pageOpen = false }: { pageOpen?: boolean }) {
   return (
     <div className="habit-list">
       <h1 className="sr-only">Habits</h1>
-      <DayHeader days={days} today={today} />
+      <ListHeader days={days} today={today} onSettings={() => openSheet({ settings: true })} />
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -152,16 +155,40 @@ export function HabitList({ pageOpen = false }: { pageOpen?: boolean }) {
           </div>
         </SortableContext>
       </DndContext>
-      {source === "none" ? null : <NewHabitButton onClick={() => openSheet({ new: true })} />}
+      {/* Over the bottom edge of the screen (of the list's column, on a desktop): the rows scroll
+          under it and fade out above it. */}
+      <div className="dock list-dock">
+        {source === "none" ? null : <NewHabitButton onClick={() => openSheet({ new: true })} />}
+      </div>
     </div>
   );
 }
 
-/** The weekday letter over the date of each column; today is bright and bold. */
-function DayHeader({ days, today }: { days: Day[]; today: Day }) {
+/**
+ * The top of the list: the gear of the settings at the left, over the icons, and the weekday letter
+ * over the date of each column at the right; today is bright and bold.
+ */
+function ListHeader({
+  days,
+  today,
+  onSettings,
+}: {
+  days: Day[];
+  today: Day;
+  onSettings: () => void;
+}) {
   return (
-    <div className="list-header" aria-hidden>
-      <div className="day-columns">
+    <div className="list-header">
+      <button
+        type="button"
+        className="list-settings"
+        aria-label="Settings"
+        aria-keyshortcuts=","
+        onClick={onSettings}
+      >
+        <GearSixIcon weight="bold" aria-hidden />
+      </button>
+      <div className="day-columns" aria-hidden>
         {days.map((day) => (
           <div key={day} className="list-header-day" data-today={day === today ? "" : undefined}>
             <small>{weekdayLetter(day)}</small>
@@ -173,12 +200,17 @@ function DayHeader({ days, today }: { days: Day[]; today: Day }) {
   );
 }
 
-/** The way into the create sheet, under the last row. */
+/** The way into the create sheet: the one solid control on the ground. */
 function NewHabitButton({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" className="new-habit" onClick={onClick}>
+    <button
+      type="button"
+      className="dock-pill dock-primary"
+      aria-keyshortcuts="N"
+      onClick={onClick}
+    >
       <PlusIcon weight="bold" aria-hidden />
-      <span className="new-habit-label">New habit</span>
+      <span className="dock-primary-label">New habit</span>
     </button>
   );
 }
@@ -186,14 +218,46 @@ function NewHabitButton({ onClick }: { onClick: () => void }) {
 /** With no habits, the create sheet opens by itself, once per visit of the list. */
 function useOpenNewWhenEmpty(empty: boolean) {
   const openSheet = useOpenSheet();
-  const { new: creating, edit, entry } = useSheetSearch();
+  const { new: creating, edit, entry, settings } = useSheetSearch();
   const opened = useRef(false);
-  const sheetOpen = creating === true || edit !== undefined || entry !== undefined;
+  const sheetOpen =
+    creating === true || edit !== undefined || entry !== undefined || settings === true;
   useEffect(() => {
     if (!empty || opened.current || sheetOpen) return;
     opened.current = true;
     openSheet({ new: true });
   }, [empty, openSheet, sheetOpen]);
+}
+
+/**
+ * The keys of the list on a keyboard: N opens "New habit", and the comma opens the settings. Not
+ * while a sheet is open or a field has the focus, and not with Cmd, Ctrl or Alt (Cmd+N is the
+ * browser's).
+ */
+function useListKeys(enabled: boolean) {
+  const openSheet = useOpenSheet();
+  const search = useSheetSearch();
+  const sheetOpen = Object.values(search).some((value) => value !== undefined);
+  useEffect(() => {
+    if (!enabled || sheetOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
+      if (event.defaultPrevented) return;
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest("input, textarea, select, [contenteditable]")) return;
+      const sheet =
+        event.key.toLowerCase() === "n"
+          ? { new: true as const }
+          : event.key === ","
+            ? { settings: true as const }
+            : null;
+      if (sheet === null) return;
+      event.preventDefault();
+      openSheet(sheet);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [enabled, openSheet, sheetOpen]);
 }
 
 function reorderAnnouncements(habits: Habit[]): Announcements {

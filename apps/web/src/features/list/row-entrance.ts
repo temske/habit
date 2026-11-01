@@ -36,8 +36,7 @@ export function enteringHabits(
 
 /**
  * Animates a new habit's row into the list at its place: it grows from no height with the morph
- * spring, so the rows under it and "New habit" move down with it, and its content rises and fades
- * in. Under reduced motion, nothing moves: the row is there at once, and it fades in.
+ * spring, so the rows under it move down with it, and its content rises and fades in. Under reduced motion, nothing moves: the row is there at once, and it fades in.
  *
  * `rows` holds one element per habit, in the order of `habits`. `loaded` is false until the first
  * data, which never animates.

@@ -79,7 +79,7 @@
       margin: 0;
     }
 
-    /* The buttons stay over the bottom edge of the page's column. */
+    /* The page's dock stays over the bottom edge of the page's column. */
     .screens[data-split] .hp-actions {
       right: auto;
       left: calc((100vw + var(--split-list) + var(--split-gap) - var(--split-page)) / 2);
@@ -135,7 +135,7 @@
 
     @media (width < 55em) {
       .screens[data-split] .habit-row-name,
-      .screens[data-split] .new-habit-label {
+      .screens[data-split] .dock-primary-label {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -149,10 +149,15 @@
         inset: calc((var(--row) - 2.375rem) / 2) calc((var(--split-list) - 2.375rem) / 2);
       }
 
-      .screens[data-split] .new-habit {
-        width: 2.375rem;
-        height: 2.375rem;
-        margin: 0.375rem auto 0;
+      /* "New habit" keeps its plus alone, a circle. */
+      .screens[data-split] .list-dock {
+        padding-inline: 0;
+      }
+
+      .screens[data-split] .dock-primary {
+        width: 3rem;
+        height: 3rem;
+        padding: 0;
       }
     }
   }
@@ -221,6 +226,38 @@
   to {
     opacity: 0;
   }
+}
+
+/* ── On a phone, the list's dock and the page's dock are one pill that changes its shape: it stays
+   over the screens while they slide under it, and grows or shrinks on their curve and in their
+   time. Each picture keeps its own size in the middle, cut to the pill, so no label is ever
+   stretched. ── */
+
+::view-transition-group(dock-pill) {
+  z-index: 2;
+  overflow: clip;
+  border-radius: 999px;
+  /* The cut takes the pill's shadow off its pictures: the group wears it while it moves. */
+  box-shadow: var(--elevation);
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-drawer);
+}
+
+::view-transition-old(dock-pill),
+::view-transition-new(dock-pill) {
+  width: 100%;
+  height: 100%;
+  object-fit: none;
+  animation-timing-function: var(--ease-out);
+}
+
+/* The old label goes quickly, so the two labels are seen together only for a moment. */
+::view-transition-old(dock-pill) {
+  animation-duration: 120ms;
+}
+
+::view-transition-new(dock-pill) {
+  animation-duration: 240ms;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -864,11 +864,13 @@
 /* ── The habit list ─────────────────────────────────────────────────────────────────────────── */
 
 @layer components {
+  /* At least the screen's height, so the dock at its end sits at the bottom of the screen. */
   .habit-list {
+    display: flex;
+    flex-direction: column;
     max-width: 600px;
+    min-height: 100dvh;
     margin: 0 auto;
-    /* Room under the last row for the toast. */
-    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
   }
 
   /* The columns of the Days. Each column is a square plus a gap wide, so the gaps are part of the
@@ -884,7 +886,8 @@
     top: 0;
     z-index: 2;
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: space-between;
     padding: calc(env(safe-area-inset-top, 0px) + 0.375rem) var(--gutter) 0.25rem;
     background: var(--ground);
   }
@@ -1033,36 +1036,139 @@
     }
   }
 
-  /* "New habit": the one control with a fill on the bare ground. */
-  .new-habit {
+  /* ── The dock: the controls of a screen in one pill over its bottom edge, near the thumb. A band
+     of the ground under the pill fades out upward, so the content scrolls under the dock but never
+     shows behind the pill. The band lets taps through; only the pill takes them. ── */
+
+  .dock {
     display: flex;
+    justify-content: center;
+    padding: 1.5rem var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    background: linear-gradient(to bottom, transparent, var(--ground) 1.5rem);
+    pointer-events: none;
+  }
+
+  .dock > * {
+    pointer-events: auto;
+  }
+
+  .dock-pill {
+    display: flex;
+    gap: 0.25rem;
+    height: 3.5rem;
+    padding: 0.25rem;
+    background: var(--surface-2);
+    border-radius: 999px;
+    box-shadow: var(--elevation);
+  }
+
+  /* On a phone, the list's pill and the page's pill are one control that changes its shape. */
+  @media (width < 40em) and (prefers-reduced-motion: no-preference) {
+    .dock-pill {
+      view-transition-name: dock-pill;
+    }
+  }
+
+  .dock-button,
+  .dock-primary {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    width: calc(100% - 2 * var(--gutter));
-    height: 3rem;
-    margin: 0.375rem var(--gutter) 0;
-    color: var(--ink-2);
     font-size: 0.9375rem;
     font-weight: 600;
     letter-spacing: -0.01em;
-    background: var(--surface-2);
-    border-radius: calc(0.75rem * var(--squircle-k));
-    corner-shape: squircle;
+    border-radius: 999px;
     transition:
       transform 120ms var(--ease-out),
       background-color 120ms ease,
       color 120ms ease;
   }
 
-  .new-habit:active {
-    transform: scale(0.98);
+  .dock-button {
+    height: 3rem;
+    padding: 0 1.25rem;
+    color: var(--ink-2);
+  }
+
+  .dock-button:active {
+    color: var(--ink);
+    background: var(--surface-3);
+    transform: scale(0.96);
+  }
+
+  /* "New habit": the one solid control on the ground. A pill of its own, without a frame. */
+  .dock-primary {
+    padding: 0 1.5rem 0 1.25rem;
+    color: var(--ground);
+    background: var(--ink);
+  }
+
+  .dock-primary svg {
+    font-size: 1.0625rem;
+  }
+
+  .dock-primary:active {
+    transform: scale(0.96);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .new-habit:hover {
+    .dock-button:hover {
       color: var(--ink);
       background: var(--surface-3);
+    }
+
+    .dock-primary:hover {
+      background: color-mix(in oklch, var(--ink) 86%, var(--ground));
+    }
+  }
+
+  /* The list's dock is the last thing in the list: it sticks to the bottom of the screen (of the
+     list's column, on a desktop), and with few rows the list's height still puts it there. */
+  .list-dock {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    margin-top: auto;
+  }
+
+  /* The gear of the settings, over the column of the icons. Its touch target overhangs the header,
+     so the header keeps the height of the dates. */
+  .list-settings {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin: -0.25rem 0 -0.25rem calc((var(--icon) - 2.75rem) / 2);
+    color: var(--ink-3);
+    font-size: var(--icon);
+    border-radius: 999px;
+    transition:
+      transform 120ms var(--ease-out),
+      background-color 120ms ease,
+      color 120ms ease;
+  }
+
+  .list-settings:active {
+    color: var(--ink);
+    background: var(--surface-2);
+    transform: scale(0.92);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .list-settings:hover {
+      color: var(--ink);
+      background: var(--surface-2);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dock-button:active,
+    .dock-primary:active,
+    .list-settings:active {
+      transform: none;
     }
   }
 

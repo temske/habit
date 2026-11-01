@@ -118,6 +118,21 @@ test("the New habit button opens the create sheet", async () => {
   await waitFor(() => expect(router.state.location.search).toMatchObject({ new: true }));
 });
 
+test("N opens the create sheet and the comma opens the settings, but not with Cmd", async () => {
+  const { router } = renderApp("/");
+  await screen.findByRole("button", { name: "New habit" });
+
+  fireEvent.keyDown(window, { key: "," });
+  await waitFor(() => expect(router.state.location.search).toMatchObject({ settings: true }));
+
+  router.history.back();
+  await waitFor(() => expect(router.state.location.search).toEqual({}));
+  fireEvent.keyDown(window, { key: "n", metaKey: true });
+  expect(router.state.location.search).toEqual({});
+  fireEvent.keyDown(window, { key: "n" });
+  await waitFor(() => expect(router.state.location.search).toMatchObject({ new: true }));
+});
+
 test("with no habits yet, the create sheet opens by itself", async () => {
   const { router } = renderApp("/", { initial: emptyState() });
 
