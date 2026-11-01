@@ -157,15 +157,24 @@ components:
   habit-row-lifted:
     backgroundColor: "{colors.surface}"
     rounded: "{rounded.row}"
-  new-habit-button:
+  dock-tabs:
     backgroundColor: "{colors.surface-2}"
-    textColor: "{colors.ink-2}"
+    rounded: "{rounded.pill}"
+    height: "3.5rem"
+    padding: "0.125rem"
+  dock-tab:
+    textColor: "{colors.ink-3}"
     typography: "{typography.control}"
-    rounded: "{rounded.row}"
+    rounded: "{rounded.pill}"
     height: "3rem"
-  new-habit-button-hover:
-    backgroundColor: "{colors.surface-3}"
+  dock-tab-current:
+    backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
+  new-habit-button:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.ground}"
+    rounded: "{rounded.pill}"
+    size: "3.5rem"
   day-header:
     textColor: "{colors.ink-3}"
     typography: "{typography.label}"
@@ -262,7 +271,7 @@ Each Day is a gauge: a squircle that fills from the bottom. An empty Day is a fr
 The care goes into motion and touch, not into decoration. A value that rises springs up, and the square pulses to about 1.04. A value that falls drains without a bounce. On a phone, forms open as bottom sheets. On a desktop, they open as dialogs and popovers. The theme follows the system setting, and there is no switch. The desktop is the phone layout in a 600px column with a 20px base, and the page of a habit opens beside the list instead of in its place.
 
 **Key Characteristics:**
-- A bare ground: white or pure black, with no surfaces at rest except the "New habit" button.
+- A bare ground: white or pure black, with no surfaces at rest except the dock and the buttons at the bottom of a screen.
 - Color only where it is data: the habit icon and the Day gauges.
 - The Day gauge (DaySquare) is the one signature shape.
 - Squircle corners everywhere, with a plain radius as the fallback.
@@ -290,7 +299,7 @@ Every color is OKLCH. The light theme is the default in CSS. The dark theme repl
 - **Line** (`line`): the frame of an empty Day and the dashed ghost gauge. Never a divider.
 - **Strong Line** (`line-strong`): an empty frame under the pointer, the sheet handle, and the scrollbar thumb.
 - **Surface** (`surface`): sheets, dialogs, popovers, and a row lifted for a reorder. In the light theme it is white like the ground and a shadow lifts it; in the dark theme it is a lighter grey, and the lightness is the elevation.
-- **Surface 2** (`surface-2`): the rest fill of a control inside a sheet and of the "New habit" button, a checked option, the close button's disc, and the skeleton shapes of the habit page.
+- **Surface 2** (`surface-2`): the rest fill of a control inside a sheet, the dock's tabs, the habit page's Back and Edit, a checked option, the close button's disc, and the skeleton shapes of the habit page.
 - **Surface 3** (`surface-3`): the hover and press fill of a control inside a sheet, the close button's disc included.
 - **Tile** (`tile`): an empty Day on the habit page, which has no frame. A partial Day of the calendar fills over 24% of the habit color mixed into the tile (in oklab, so the tint keeps the habit's hue); a Day of the year grid is the habit color mixed into the tile, from 25% to solid.
 - **Field** (`field`): a text field inside a sheet. In the light theme it equals `surface-2`. In the dark theme it is a well of pure black, so the placeholder keeps its contrast.
@@ -342,7 +351,7 @@ The phone layout is the layout. A desktop gets the same layout with more room.
 
 - **Breakpoints.** Wide is 640px and more (`min-width: 40rem`). Narrow is 359px and less (`max-width: 22.4375rem`).
 - **Wide.** The root font size becomes 125% (20px), so every rem in the app scales by 1.25. The list shows 7 Days instead of 5. Forms open as dialogs and popovers instead of bottom sheets. The content sits in a centered column of 600px. The column is in px, so it does not scale.
-- **The page beside the list (wide).** The page of a habit opens to the right of the list (`features/screens/`), and the two sit together in the middle of the window. The window does not scroll: the list and the page are columns of the window's height, each with its own scroll, and each reaches its edge of the window, so a wheel over the margin scrolls the column next to it. The page's column is at most 600px. The list takes what is left, in three steps: the whole list with its Days and 2.5rem before the page (1200px and more), the icons and the names in 15rem (880px and more), and the icons alone (640px and more). The rows keep their place in each step; the day header keeps its height without its dates. The open habit's row has a fill of 6% `ink`, which keeps the ring of an empty Day visible in both themes (0.75rem squircle, 0.25rem in from the row and 0.625rem in from the edges; a 2.375rem square around the icon when only icons show), and its name is `ink`. With only icons, "New habit" is a 2.375rem square with its plus. A row picked while a page is open replaces that page in the history, so Back returns to the list.
+- **The page beside the list (wide).** The page of a habit opens to the right of the list (`features/screens/`), and the two sit together in the middle of the window. The window does not scroll: the list and the page are columns of the window's height, each with its own scroll, and each reaches its edge of the window, so a wheel over the margin scrolls the column next to it. The page's column is at most 600px. The list takes what is left, in three steps: the whole list with its Days and 2.5rem before the page (1200px and more), the icons and the names in 15rem (880px and more), and the icons alone (640px and more). The rows keep their place in each step; the day header keeps its height without its dates. The open habit's row has a fill of 6% `ink`, which keeps the ring of an empty Day visible in both themes (0.75rem squircle, 0.25rem in from the row and 0.625rem in from the edges; a 2.375rem square around the icon when only icons show), and its name is `ink`. The list's column keeps its dock: from 880px to 1200px the tabs show their icons alone, and with only icons the dock keeps "New habit" alone. A row picked while a page is open replaces that page in the history, so Back returns to the list.
 - **The row.** The icon and the name are at the left; the Days are at the right, with today at the far right. A row is `row` tall (54px on a phone) and has a `gutter` on each side. The name takes the remaining width and truncates.
 - **The Day columns.** Each column is a square plus a gap wide, so the gap is part of the touch target. The half gaps at the ends hang outside, so the last square meets the gutter. The day header uses the same columns, so each date sits over its squares.
 - **Narrow.** At 320px the gutter is 1rem, the squares are 1.75rem and the gap is 0.3125rem, so a name keeps room next to five Days.
@@ -437,7 +446,9 @@ Empty and zero are both "frame only", but they differ: a recorded zero is data a
 - **Structure:** the head (icon, then the name 0.75rem after it) at the left, the Day cells at the right. No background, no border, no divider.
 - **Name:** Title type in `ink-2`; `ink` under a fine pointer (120ms).
 - **Lifted for a reorder:** the row scales to 1.02, takes a `surface` background with a 0.75rem squircle radius and `var(--elevation)`, and the name turns `ink`. The neighbors move aside in 200ms with `--ease-out`. Under reduced motion the lift has no scale and the neighbors move at once.
-- **"New habit" button:** under the last row, as wide as the rows between the gutters and 3rem high. A `surface-2` fill with a 0.75rem squircle radius, a bold Phosphor plus and "New habit" centered in Control type, in `ink-2`. Under a fine pointer the fill turns `surface-3` and the text `ink`. A press scales it to 0.98. It is the one control with a fill on the bare ground, so the way to a first habit is never missed.
+- **Dock:** the last thing in the list (and in the settings), sticky at the bottom of the screen (of the list's column, on a desktop), 0.75rem above the bottom safe area. The screen is at least as tall as the window, so with few rows the dock still sits at the bottom. A band of `ground` under it fades out upward over 1.5rem, so the rows scroll under it and never show behind it. It has two parts, 0.625rem apart, in the middle:
+  - **Tabs:** a tab for each screen of the top level, Habits (a Phosphor rows icon) and Settings (a gear), in the look of the form's segmented controls: a 3.5rem pill of `surface-2` with 0.125rem around and between the tabs, and no shadow. A tab is a pill as tall as the track, with its icon (bold; filled on the current tab) and its name at 0.9375rem and 500, in `ink-3`. The current tab is raised: a pill of `surface` with the segment's small shadow in the light theme, `surface-3` in the dark theme, and `ink`. A tab changes the screen in place, without a history entry, and the change is a view transition: the raised pill slides to the new tab with the lift spring, under the icons and names, which change their color in 200ms; "New habit" stays; and the screen crossfades in 260ms while it moves 1.5rem the way the tabs go. Under reduced motion the screens only crossfade. The comma key opens the settings.
+  - **"New habit":** a 3.5rem circle of `ink` with a bold plus in `ground`, and no shadow: the one solid control on the ground, so the way to a first habit is never missed. Under a fine pointer it takes 86% of `ink`; a press scales it to 0.94. The N key opens it too. It shows when the data has come.
 - **A new habit enters:** after "Add habit", its row grows at its place from no height with the morph spring, 120ms after the press, while the sheet leaves; the rows under it and "New habit" move down with it, and its content comes down 0.75rem and fades in over 240ms. Only a habit made in the last 3 seconds enters: the first load, the snapshot's change to the live data and the Undo of a delete never animate. Under reduced motion nothing moves, and the row fades in over 180ms.
 
 ### Day header
@@ -519,7 +530,7 @@ The create sheet (`?new=true`) and the edit sheet (`?edit=<id>`), in `features/h
 
 The page of one habit (`/habits/$habitId`), in `features/habit-page/`.
 
-- **Bottom buttons:** back (4.5rem wide, with a bold Phosphor caret), then "Edit" (a bold pencil and the label) in the rest of the row, 0.5rem apart, fixed 0.75rem above the bottom safe area in the page's column. They look like the "New habit" button: `surface-2`, a 0.75rem squircle, 3rem tall, Control type in `ink-2`, and `surface-3` with `ink` under a fine pointer. Back presses to 0.96, Edit to 0.98. They stand on a band of `ground` with a 1rem fade above it, so the page scrolls out under them and never shows its tiles around them. On this page the toasts rise 3.25rem, above them.
+- **Bottom buttons:** in the place of the dock, which belongs to the screens of the top level, and in its look: back, a 3.5rem circle with a bold Phosphor caret, and apart from it, 0.5rem away, "Edit", a 3.5rem pill with a bold pencil and the label. Both are `surface-2` without a shadow, in Control type and `ink-2`, with `surface-3` and `ink` under a fine pointer, and press to 0.96. They sit in the middle of the page's column, 0.75rem above the bottom safe area, on a band of `ground` that fades out upward over 1.5rem, so the page scrolls out under them and never shows its tiles around them. The toasts rise 3.75rem on every screen, above the dock and these buttons.
 - **Title:** the habit icon at 1.75rem and the name at 1.375rem with a 1.75rem line, 600, `ink`, -0.02em, 0.75rem apart, the icon on the first line, 0.75rem under the top safe area on a phone (close under the status bar, as the list's day header is) and 1.5rem from the top on a desktop. The name wraps (it is the page's `h1`). The description sits under the name in `ink-3` at 0.9375rem. The year grid starts 1.25rem under the title. On a desktop, where the page changes to another habit in place, a habit with no description keeps the room of its line, so the grid and the calendar start at the same height on each page; only a name or a description that wraps pushes them down. A phone shows one page at a time and gives that room to the Days.
 - **Year grid:** 52 Monday weeks of flat `DaySquare`s (`look="flat"`) that end with the week of today, in squares of 0.875rem with a 0.1875rem gap; the grid does not animate. It scrolls sideways from edge to edge of the column, with no fade at its edges, and opens at today, where it ends at the gutter. When the calendar moves to a Month of the grid, the grid scrolls it into view. Each Month is a button over its columns: its short name (Label size in `ink-3`; the shown Month in `ink` at 600) and its squares. Under a fine pointer a Month takes 6% of `ink`.
 - **Calendar:** the weekday letters, then the Days in 7 columns, one row for each week of the Month, then the controls right under the last row, near the thumb: the name of the Month as plain text (0.9375rem at 600 in `ink`, with a bold caret in `ink-3`; it opens the picker), "Today" (only when another Month shows) and two carets. The first and the last square meet the gutters: the room between the squares is shared out evenly, each column is a square and a gap wide, and each weekday letter stands over the middle of its square.
@@ -535,6 +546,10 @@ The page of one habit (`/habits/$habitId`), in `features/habit-page/`.
 - **Beside the list (wide):** the list moves aside with the sheet spring and keeps its left edge: its column narrows to the next step, which cuts off what it drops, while its old and new pictures cross in 240ms. The page comes from the right with it, from as far as the list moves plus 1.5rem, and fades in over 300ms. Back plays it in reverse, the page fading in 200ms. Another habit crossfades the pages in 200ms. The title does not move. Under reduced motion nothing moves, and the page fades in 180ms.
 - **Under edit, on a phone:** the page rises with the sheet spring until the Day is 16px above the input sheet, and comes back when the sheet closes.
 - **Empty state:** a ghost gauge, "This habit is not here" (Title type), a line in `ink-3`, and a "Back to habits" button.
+
+### Settings
+
+The second screen of the top level (`/settings`), in `features/settings/`, with the dock at its bottom. A column of the list's width: the title "Settings" (1.5rem, 600, `ink`, -0.02em) 2rem under the top safe area, then a section for each subject, 2rem apart. A section has its heading in Caption size, 500, `ink-3`, and its content 0.625rem under it. For now: the account (Sign out, a quiet button as wide as the column) and a line on the theme, which follows the system. Archive, import and export come later as sections of their own.
 
 ### Before the list: loading, sign-in, no access
 
@@ -559,7 +574,7 @@ All motion comes from the presets in `@/components/motion`, after Family: spring
 - **Springs (Motion):** fill (visual duration 0.38s, bounce 0.24), sheet (0.42s, bounce 0.1), morph (0.34s, bounce 0.12), and pulse (stiffness 600, damping 18, mass 1, start velocity 1.6, a peak of about 1.04). `installCssSprings()` puts the fill and sheet springs on the document as `--spring-fill` and `--spring-sheet` (`linear()` easings), so CSS and JS motion match. The sheet spring also comes in parts, `--spring-sheet-duration` and `--spring-sheet-easing`, for a view transition's group, whose animation has no author name.
 - **Curves:** `--ease-out` (`cubic-bezier(0.23, 1, 0.32, 1)`) for every plain transition; `--ease-drawer` (`cubic-bezier(0.32, 0.72, 0, 1)`) for the bottom sheet and its scrim.
 - **Durations:** a press 120ms; a color change 120ms; a check mark or a frame 160ms; a popover 180ms; a dialog, a drain and a reorder 200ms; the sheet scrim 400ms.
-- **Presses:** larger elements press less. A Day and a stepper press to 0.95, the close button and the toast action to 0.96, a button to 0.97, the "New habit" button to 0.98, an option to 0.985.
+- **Presses:** larger elements press less. A Day and a stepper press to 0.95, the close button, the toast action and a tab of the dock to 0.96, "New habit" to 0.94, a button to 0.97, an option to 0.985.
 - **Reduced motion:** a fade replaces each movement (180ms with `--ease-out`). Components read `useReducedMotion()` and drop transforms. A swipe still follows the finger.
 
 ### Named Rules

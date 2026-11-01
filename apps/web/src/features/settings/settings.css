@@ -1,0 +1,49 @@
+/*
+ * The settings, in the world of the list (styles.css): a ground with no surfaces and space instead
+ * of lines. A column of the list's width, as tall as the screen at least, so the dock at its end
+ * sits at the bottom of the screen.
+ */
+
+@layer components {
+  .settings-screen {
+    display: flex;
+    flex-direction: column;
+    max-width: 600px;
+    min-height: 100dvh;
+    margin: 0 auto;
+  }
+
+  .settings-page {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: calc(env(safe-area-inset-top, 0px) + 2rem) var(--gutter) 2rem;
+  }
+
+  .settings-title {
+    color: var(--ink);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.875rem;
+    letter-spacing: -0.02em;
+  }
+
+  .settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .settings-heading {
+    color: var(--ink-3);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1rem;
+  }
+
+  .settings-text {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+  }
+}

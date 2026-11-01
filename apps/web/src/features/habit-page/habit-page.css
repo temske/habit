@@ -20,8 +20,10 @@
 
   /* ── The buttons at the bottom ── */
 
-  /* Over the bottom edge of the page, near the thumb, on a band of the ground: the page scrolls
-     under it and fades out above it, so the buttons never sit on the tiles of the calendar. */
+  /* Over the bottom edge of the page, near the thumb, as the dock of the list (features/dock): a
+     circle for back to the list, apart from the page's own control, a pill. A band of the ground
+     under them fades out upward, so the page scrolls under them and its tiles never show around
+     them. The band lets taps through; only the buttons take them. */
   .hp-actions {
     position: fixed;
     right: 0;
@@ -29,38 +31,29 @@
     left: 0;
     z-index: 10;
     display: flex;
+    justify-content: center;
     gap: 0.5rem;
     max-width: 600px;
     margin: 0 auto;
-    padding: 0.5rem var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
-    background: var(--ground);
-  }
-
-  .hp-actions::before {
-    position: absolute;
-    right: 0;
-    bottom: 100%;
-    left: 0;
-    height: 1rem;
-    background: linear-gradient(to bottom, transparent, var(--ground));
+    padding: 1.5rem var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    background: linear-gradient(to bottom, transparent, var(--ground) 1.5rem);
     pointer-events: none;
-    content: "";
   }
 
-  /* The look of the list's "New habit" button. */
   .hp-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    height: 3rem;
+    height: 3.5rem;
     background: var(--surface-2);
     color: var(--ink-2);
     font-size: 0.9375rem;
     font-weight: 600;
     letter-spacing: -0.01em;
-    border-radius: calc(0.75rem * var(--squircle-k));
-    corner-shape: squircle;
+    border-radius: 999px;
+    pointer-events: auto;
+    touch-action: manipulation;
     transition:
       transform 120ms var(--ease-out),
       background-color 120ms ease,
@@ -69,25 +62,22 @@
 
   .hp-back {
     flex: none;
-    width: 4.5rem;
+    width: 3.5rem;
     font-size: 1.25rem;
   }
 
   .hp-edit {
-    flex: 1;
     min-width: 0;
+    padding: 0 1.75rem 0 1.5rem;
   }
 
   .hp-edit svg {
     font-size: 1.0625rem;
   }
 
-  .hp-back:active {
-    transform: scale(0.96);
-  }
-
+  .hp-back:active,
   .hp-edit:active {
-    transform: scale(0.98);
+    transform: scale(0.96);
   }
 
   @media (hover: hover) and (pointer: fine) {

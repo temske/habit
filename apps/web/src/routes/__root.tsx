@@ -1,4 +1,4 @@
-import { createRootRoute, Outlet, useMatch } from "@tanstack/react-router";
+import { createRootRoute, Outlet } from "@tanstack/react-router";
 
 import { validateSheetSearch } from "@/components/sheet-search";
 import { AppToaster } from "@/components/toast";
@@ -14,9 +14,6 @@ export const Route = createRootRoute({
 });
 
 function Root() {
-  // The habit page's Back and Edit float at the bottom: its toasts show above them.
-  const onHabitPage =
-    useMatch({ from: "/_screens/habits/$habitId", shouldThrow: false }) !== undefined;
   return (
     <>
       {/* Only the owner gets the screens; the other states of the sign-in get their own. */}
@@ -25,7 +22,8 @@ function Root() {
         <HabitFormSheet />
         <EntryInputSheet />
       </AuthGate>
-      <AppToaster lift={onHabitPage ? "3.25rem" : undefined} />
+      {/* Each screen has its dock at the bottom: the toasts show above it. */}
+      <AppToaster lift="3.75rem" />
     </>
   );
 }

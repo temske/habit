@@ -18,7 +18,6 @@ import {
 } from "@dnd-kit/sortable";
 import { lastDays, orderBetween, paintAction, tapResult, type Day, type Habit } from "@habit/core";
 import { useEntries, useHabits } from "@habit/data";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useAct } from "@/components/act";
@@ -27,6 +26,7 @@ import { preloadHabitIcons } from "@/components/habit-icon";
 import { haptic } from "@/components/haptics";
 import { entryRef, useOpenSheet, useSheetSearch } from "@/components/sheet-search";
 import { useIsWide } from "@/components/use-media-query";
+import { Dock } from "@/features/dock";
 import { HabitRow } from "@/features/list/habit-row";
 import { useRowEntrance } from "@/features/list/row-entrance";
 import { useToday } from "@/features/list/use-today";
@@ -36,9 +36,9 @@ const LIFT_DELAY_MS = 300;
 
 /**
  * The habit list, the main screen: a sticky header of the last Days, a row per habit, and the
- * "New habit" button at the end. No title, no cards, no lines: space separates the rows. With
- * `pageOpen`, the page of a habit is open beside the list (a desktop), and a row opens its page in
- * that place.
+ * dock over the bottom edge, near the thumb. No title, no cards, no lines: space separates the
+ * rows. With `pageOpen`, the page of a habit is open beside the list (a desktop), and a row opens
+ * its page in that place.
  */
 export function HabitList({ pageOpen = false }: { pageOpen?: boolean }) {
   const { source, habits } = useHabits();
@@ -152,7 +152,7 @@ export function HabitList({ pageOpen = false }: { pageOpen?: boolean }) {
           </div>
         </SortableContext>
       </DndContext>
-      {source === "none" ? null : <NewHabitButton onClick={() => openSheet({ new: true })} />}
+      <Dock current="habits" canCreate={source !== "none"} />
     </div>
   );
 }
@@ -170,16 +170,6 @@ function DayHeader({ days, today }: { days: Day[]; today: Day }) {
         ))}
       </div>
     </div>
-  );
-}
-
-/** The way into the create sheet, under the last row. */
-function NewHabitButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button type="button" className="new-habit" onClick={onClick}>
-      <PlusIcon weight="bold" aria-hidden />
-      <span className="new-habit-label">New habit</span>
-    </button>
   );
 }
 

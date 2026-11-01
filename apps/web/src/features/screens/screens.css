@@ -129,13 +129,26 @@
       .screens[data-split] .habit-row-head {
         margin-right: 0;
       }
+
+      /* The dock's tabs keep their icons alone; the names stay for screen readers. */
+      .screens[data-split] .dock-tab {
+        padding: 0 0.875rem;
+      }
+
+      .screens[data-split] .dock-tab-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
     }
 
     /* ── The icons alone: the names stay for screen readers. ── */
 
     @media (width < 55em) {
-      .screens[data-split] .habit-row-name,
-      .screens[data-split] .new-habit-label {
+      .screens[data-split] .habit-row-name {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -149,10 +162,13 @@
         inset: calc((var(--row) - 2.375rem) / 2) calc((var(--split-list) - 2.375rem) / 2);
       }
 
-      .screens[data-split] .new-habit {
-        width: 2.375rem;
-        height: 2.375rem;
-        margin: 0.375rem auto 0;
+      /* No room for the tabs: the dock keeps "New habit". The page's Back leads to the tabs. */
+      .screens[data-split] .habit-list .dock {
+        padding-inline: 0;
+      }
+
+      .screens[data-split] .dock-tabs {
+        display: none;
       }
     }
   }

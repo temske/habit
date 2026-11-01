@@ -1,0 +1,243 @@
+/*
+ * The dock (index.tsx): a pill of tabs and the "New habit" circle, over the bottom edge of a
+ * top-level screen. The tabs look like the segmented controls of the habit form, in a pill: a
+ * `surface-2` track, and the tab on show raised on it. No shadow under the dock: a band of the
+ * ground under it fades out upward, so the content scrolls under the dock but never shows behind
+ * it. The band lets taps through; only the controls take them.
+ */
+
+@layer components {
+  .dock {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding: 1.5rem var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    background: linear-gradient(to bottom, transparent, var(--ground) 1.5rem);
+    pointer-events: none;
+  }
+
+  .dock > * {
+    pointer-events: auto;
+  }
+
+  .dock-tabs {
+    display: flex;
+    gap: 0.125rem;
+    height: 3.5rem;
+    padding: 0.125rem;
+    background: var(--surface-2);
+    border-radius: 999px;
+  }
+
+  .dock-tab {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 1.25rem 0 1.125rem;
+    color: var(--ink-3);
+    border-radius: 999px;
+    transition:
+      color 150ms var(--ease-out),
+      scale 150ms var(--ease-out);
+    touch-action: manipulation;
+    user-select: none;
+  }
+
+  .dock-tab[aria-current="page"] {
+    color: var(--ink);
+  }
+
+  .dock-tab:active {
+    scale: 0.97;
+  }
+
+  .dock-tab-content {
+    display: flex;
+    align-items: center;
+    gap: 0.4375rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+  }
+
+  .dock-tab-content svg {
+    font-size: 1.25rem;
+  }
+
+  /* The raised tab, as the chosen segment of the form's controls. */
+  .dock-tab-pill {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--surface);
+    border-radius: 999px;
+    box-shadow: 0 0.0625rem 0.1875rem oklch(0 0 0 / 0.1);
+  }
+
+  /* "New habit": the one solid control on the ground. */
+  .dock-create {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    color: var(--ground);
+    font-size: 1.375rem;
+    background: var(--ink);
+    border-radius: 999px;
+    transition:
+      scale 150ms var(--ease-out),
+      background-color 150ms ease;
+    touch-action: manipulation;
+  }
+
+  .dock-create:active {
+    scale: 0.94;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .dock-tab:not([aria-current="page"]):hover {
+      color: var(--ink);
+    }
+
+    .dock-create:hover {
+      background: color-mix(in oklch, var(--ink) 86%, var(--ground));
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .dock-tab-pill {
+      background: var(--surface-3);
+      box-shadow: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dock-tab:active,
+    .dock-create:active {
+      scale: none;
+    }
+  }
+}
+
+/* ── A change of tab (index.tsx): the raised pill slides to the new tab under the tabs' icons and
+   names, which change their color in place; "New habit" stays; and the screen moves 1.5rem the
+   way the tabs go while it crossfades. The parts of the dock take their names only for this
+   transition, so the move to a habit's page (screens.css) never sees them. ── */
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:active-view-transition-type(tab-forward, tab-back) {
+    .dock-tabs {
+      view-transition-name: dock-tabs;
+    }
+
+    .dock-tab-pill {
+      view-transition-name: dock-tab-pill;
+    }
+
+    .dock-tab[data-tab="habits"] .dock-tab-content {
+      view-transition-name: dock-tab-habits;
+    }
+
+    .dock-tab[data-tab="settings"] .dock-tab-content {
+      view-transition-name: dock-tab-settings;
+    }
+
+    .dock-create {
+      view-transition-name: dock-create;
+    }
+
+    /* On a desktop the list has a group of its own (screens.css): here it moves with the screen. */
+    .screens-list .habit-list {
+      view-transition-name: none;
+    }
+  }
+
+  ::view-transition-group(dock-tabs) {
+    z-index: 1;
+  }
+
+  ::view-transition-group(dock-tab-pill) {
+    z-index: 2;
+    /* The lift spring, as the chosen segment of the form's controls moves. */
+    animation-duration: var(--spring-lift-duration, 300ms);
+    animation-timing-function: var(--spring-lift-easing, var(--ease-out));
+  }
+
+  ::view-transition-group(dock-tab-habits),
+  ::view-transition-group(dock-tab-settings) {
+    z-index: 3;
+  }
+
+  ::view-transition-old(dock-tab-habits),
+  ::view-transition-new(dock-tab-habits),
+  ::view-transition-old(dock-tab-settings),
+  ::view-transition-new(dock-tab-settings) {
+    animation-duration: 200ms;
+    animation-timing-function: var(--ease-out);
+  }
+
+  ::view-transition-group(dock-create) {
+    z-index: 1;
+  }
+
+  :root:active-view-transition-type(tab-forward, tab-back)::view-transition-old(root),
+  :root:active-view-transition-type(tab-forward, tab-back)::view-transition-new(root) {
+    animation-duration: 260ms;
+    animation-timing-function: var(--ease-out);
+    animation-fill-mode: both;
+  }
+
+  :root:active-view-transition-type(tab-forward)::view-transition-old(root) {
+    animation-name: dock-out-left;
+  }
+
+  :root:active-view-transition-type(tab-forward)::view-transition-new(root) {
+    animation-name: dock-in-right;
+  }
+
+  :root:active-view-transition-type(tab-back)::view-transition-old(root) {
+    animation-name: dock-out-right;
+  }
+
+  :root:active-view-transition-type(tab-back)::view-transition-new(root) {
+    animation-name: dock-in-left;
+  }
+}
+
+@keyframes dock-out-left {
+  to {
+    transform: translateX(-1.5rem);
+    opacity: 0;
+  }
+}
+
+@keyframes dock-in-right {
+  from {
+    transform: translateX(1.5rem);
+    opacity: 0;
+  }
+}
+
+@keyframes dock-out-right {
+  to {
+    transform: translateX(1.5rem);
+    opacity: 0;
+  }
+}
+
+@keyframes dock-in-left {
+  from {
+    transform: translateX(-1.5rem);
+    opacity: 0;
+  }
+}

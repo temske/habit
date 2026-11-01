@@ -952,11 +952,13 @@
 /* ── The habit list ─────────────────────────────────────────────────────────────────────────── */
 
 @layer components {
+  /* At least the screen's height, so the dock at its end sits at the bottom of the screen. */
   .habit-list {
+    display: flex;
+    flex-direction: column;
     max-width: 600px;
+    min-height: 100dvh;
     margin: 0 auto;
-    /* Room under the last row for the toast. */
-    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
   }
 
   /* The columns of the Days. Each column is a square plus a gap wide, so the gaps are part of the
@@ -1118,39 +1120,6 @@
   @media (hover: hover) and (pointer: fine) {
     .day-cell:hover .day-square[data-state="empty"] {
       box-shadow: inset 0 0 0 var(--ds-frame, 0.09375rem) var(--line-strong);
-    }
-  }
-
-  /* "New habit": the one control with a fill on the bare ground. */
-  .new-habit {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: calc(100% - 2 * var(--gutter));
-    height: 3rem;
-    margin: 0.375rem var(--gutter) 0;
-    color: var(--ink-2);
-    font-size: 0.9375rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    background: var(--surface-2);
-    border-radius: calc(0.75rem * var(--squircle-k));
-    corner-shape: squircle;
-    transition:
-      transform 120ms var(--ease-out),
-      background-color 120ms ease,
-      color 120ms ease;
-  }
-
-  .new-habit:active {
-    transform: scale(0.98);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .new-habit:hover {
-      color: var(--ink);
-      background: var(--surface-3);
     }
   }
 
