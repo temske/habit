@@ -144,7 +144,6 @@ export function HabitList({ pageOpen = false }: { pageOpen?: boolean }) {
                   days={days}
                   today={today}
                   entries={entries}
-                  wide={wide}
                   replace={pageOpen}
                   onTap={onTap}
                   onOpenInput={onOpenInput}

@@ -87,12 +87,6 @@
       margin: 0;
     }
 
-    /* The title does not come from the row, which stays in its place. */
-    .screens[data-split] .hp-identity-icon,
-    .screens[data-split] .hp-name {
-      view-transition-name: none;
-    }
-
     /* The habit whose page is open. The fill stays under the ring of an empty Day (`line`) in both
        themes, so the ring still shows on it. */
     .screens[data-split] .habit-row-inner {
@@ -245,5 +239,92 @@
 
   ::view-transition-old(screens-page):only-child {
     animation: screens-fade-out 180ms ease both;
+  }
+}
+
+/* ── The rest of the screen crossfades: on a desktop, around the list and the page; on a phone, in
+   a browser without view transition types. ── */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 180ms;
+  }
+}
+
+/* ── On a phone, a page comes in as a native app pushes a screen (screen-transition.ts): it slides
+   in from the right over the list, and the list moves a third of the way to the left and dims.
+   Back plays the reverse, with the page on top. Both move on the same curve and for the same time,
+   so no gap opens between them. A finger that lands during it ends it at once, and its tap goes to
+   the screen under it. Under reduced motion the screens crossfade. ── */
+
+@media (width < 40em) and (prefers-reduced-motion: no-preference) {
+  :active-view-transition-type(screen-push, screen-pop)::view-transition-old(root),
+  :active-view-transition-type(screen-push, screen-pop)::view-transition-new(root) {
+    animation-duration: 420ms;
+    animation-timing-function: var(--ease-drawer);
+    animation-fill-mode: both;
+    mix-blend-mode: normal;
+  }
+
+  :active-view-transition-type(screen-push)::view-transition-old(root) {
+    animation-name: screens-under-out;
+  }
+
+  :active-view-transition-type(screen-push)::view-transition-new(root) {
+    animation-name: screens-over-in;
+  }
+
+  :active-view-transition-type(screen-pop)::view-transition-old(root) {
+    z-index: 1;
+    animation-name: screens-over-out;
+  }
+
+  :active-view-transition-type(screen-pop)::view-transition-new(root) {
+    animation-name: screens-under-in;
+  }
+}
+
+@keyframes screens-over-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes screens-over-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes screens-under-out {
+  to {
+    transform: translateX(-30%);
+    filter: brightness(var(--screens-dim));
+  }
+}
+
+@keyframes screens-under-in {
+  from {
+    transform: translateX(-30%);
+    filter: brightness(var(--screens-dim));
+  }
+}
+
+/* How dark the list goes under the page: a little on white, more on black, where only the ink and
+   the habit colors can dim. */
+:root {
+  --screens-dim: 0.9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --screens-dim: 0.6;
   }
 }

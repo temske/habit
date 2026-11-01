@@ -7,13 +7,11 @@ import { memo, type CSSProperties, type MouseEvent } from "react";
 
 import { HabitIcon } from "@/components/habit-icon";
 import { habitColorStyle } from "@/components/palette";
-import { markPlate } from "@/features/habit-page/plate-transition";
 import { DayCells, type DayCellsProps } from "@/features/list/day-cells";
+import { beforeScreenChange, screenTransition } from "@/features/screens/screen-transition";
 
 export interface HabitRowProps extends Pick<DayCellsProps, "days" | "today" | "entries"> {
   habit: Habit;
-  /** The wide layout (a desktop): the page opens beside the list, not out of the row. */
-  wide: boolean;
   /**
    * A page is open beside the list: this row's page takes its place in the history, so Back
    * returns to the list and not to the page before.
@@ -33,7 +31,6 @@ export const HabitRow = memo(function HabitRow({
   days,
   today,
   entries,
-  wide,
   replace,
   onTap,
   onOpenInput,
@@ -81,14 +78,10 @@ export const HabitRow = memo(function HabitRow({
           {...sortableAttributes}
           {...listeners}
           aria-roledescription="habit, long press to reorder"
-          data-plate={habit.id}
-          // On a phone the icon and the name grow into the title of the habit page; under reduced
-          // motion the screens only crossfade. On a desktop the page slides in beside the list.
-          viewTransition
+          // On a phone the page slides in over the list; on a desktop it slides in beside it.
+          viewTransition={screenTransition}
           onClick={(event: MouseEvent<HTMLAnchorElement>) => {
-            if (isPlainClick(event)) {
-              markPlate(event.currentTarget, { plate: !reduceMotion && !wide });
-            }
+            if (isPlainClick(event)) beforeScreenChange();
           }}
         >
           <HabitIcon icon={habit.icon} color={habit.color} />
@@ -110,17 +103,7 @@ export const HabitRow = memo(function HabitRow({
   );
 });
 
-/**
- * A click of a pointer that navigates in this tab: no modifier key, the main button. Enter on the
- * link (`detail` 0) is the keyboard, which does not animate.
- */
+/** A click that navigates in this tab: no modifier key, the main button. */
 function isPlainClick(event: MouseEvent): boolean {
-  return (
-    event.detail !== 0 &&
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey
-  );
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
