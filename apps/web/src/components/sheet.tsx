@@ -6,6 +6,8 @@ import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 import { springs } from "@/components/motion";
+import { trackSheetViewport } from "@/components/sheet-viewport";
+import { dimThemeColor } from "@/components/theme-color";
 import { useIsWide } from "@/components/use-media-query";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +75,9 @@ function BottomSheet({
   className,
   children,
 }: ResponsiveSheetProps) {
+  // The installed app's status bar is outside the page: tint it with the scrim.
+  useEffect(() => (open ? dimThemeColor() : undefined), [open]);
+
   return (
     <Drawer.Root
       open={open}
@@ -83,14 +88,21 @@ function BottomSheet({
     >
       <Drawer.Portal>
         <Drawer.Backdrop className="sheet-backdrop" />
-        <Drawer.Viewport className="sheet-viewport">
+        {/* What Safari 26 samples for the color of its bars at the top and the bottom edge. */}
+        {open ? (
+          <>
+            <div className="sheet-edge" data-edge="top" aria-hidden />
+            <div className="sheet-edge" data-edge="bottom" aria-hidden />
+          </>
+        ) : null}
+        <Drawer.Viewport className="sheet-viewport" ref={trackSheetViewport}>
           <Drawer.VirtualKeyboardProvider>
             <Drawer.Popup
               className={cn("sheet-popup", className)}
               {...(initialFocus === undefined ? {} : { initialFocus })}
             >
               <div className="sheet-handle" aria-hidden />
-              <Drawer.Content>
+              <Drawer.Content className="sheet-content">
                 <MorphHeight>
                   <SheetHeader
                     title={<Drawer.Title className={titleClass(hideTitle)}>{title}</Drawer.Title>}
