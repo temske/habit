@@ -12,8 +12,8 @@ questions, so the brief won.)
 
 - **Create, two steps** (after Family): first the icon, the name, the description, the color, the
   Kind and the Direction. Then the fields of a number, choice or scale habit. The first step adds a check or a text habit at once ("Add habit").
-  For the other Kinds it goes "Next". The icon picker is a
-  step of its own. The sheet morphs its height between the steps. "Add habit" performs
+  For the other Kinds it goes "Next". The icon picker unfolds
+  in the form, under the name (see "Icon picker place" below). The sheet morphs its height. "Add habit" performs
   `createHabit` with the order after `lastOrder(state)` (so also after a deleted habit) and closes
   the sheet.
 - **Edit**: the same fields, without the Kind (it shows as "Set when created"). No save button:
@@ -31,9 +31,21 @@ questions, so the brief won.)
 - **Choice and scale**: a row per Option with its emoji, its label, remove and a drag handle (the
   up and down arrow keys move it too). A scale draws each Option's fill level. Add stops at 12 (5
   for a scale). Remove stops at 1 (2 for a scale). Return in a label goes to the next row, or adds
-  one. A tap on the emoji opens the emoji picker as a step of the sheet: the emoji of the icon
+  one. A tap on the emoji unfolds the emoji picker under the row: the emoji of the icon
   picker and its search, without the Phosphor icons (an Option stores an emoji), and "No emoji"
   first. A picked emoji returns to the form, with the focus on that emoji.
+- **Choice and scale share their Options**, so a switch between them keeps the rows (and what
+  was typed) in place. What a scale adds moves instead: each row's level gauge opens its room, one
+  row after the other, and its fill rises; the label above rolls to its scale wording.
+- **Icon picker place** (a lab choice, `icon-picker-place`), after the owner found the step that
+  replaced the whole sheet abrupt. "Inline", the first and what production ships: the picker
+  unfolds under the button that opened it (the icon tile, or an Option's emoji), the rest of the
+  form stays and moves down, and a pick, a second tap or Escape folds it away. It keeps the form
+  in sight and adds no layer, as the icon grid of a list in Reminders. "Stacked sheet": a second
+  sheet over the form (a Base UI nested drawer); the form steps back to 0.94, dims, and shows
+  its top edge above the picker. "Popover": a compact picker at the button. "Step": the old step,
+  which now zooms out of the button and back into it instead of the sideways shift. Both sheets
+  read the same choice. Picked "Inline": the others add a layer or take the form away.
 - **Option rows on touch** (a lab choice, `option-row-touch`): "Buttons" keeps the remove button
   and the handle. "Gestures" hides both on a coarse pointer: a hold of 300 ms on the emoji lifts
   the row, as in the list, and a swipe to the left uncovers Remove (a long or fast swipe removes

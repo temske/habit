@@ -31,6 +31,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type ReactNode,
   type TouchEventHandler,
 } from "react";
 import { flushSync } from "react-dom";
@@ -38,11 +39,13 @@ import { flushSync } from "react-dom";
 import { DaySquare } from "@/components/day-square";
 import { haptic } from "@/components/haptics";
 import { useVariant } from "@/components/lab";
+import { springs } from "@/components/motion";
+import { habitColorStyle } from "@/components/palette";
 import { cn } from "@/lib/utils";
 
 import { FieldMessage, fieldClass, SectionLabel } from "./controls";
 import { OPTION_LIMITS, offered, retired, scaleIntensity } from "./draft";
-import { rowPresence } from "./presence";
+import { EASE_OUT, FADE_IN, FADE_OUT, rowPresence } from "./presence";
 import { REMOVE_WIDTH, useSwipeToRemove } from "./swipe-to-remove";
 
 /** On touch, a press on an Option's emoji this long lifts the row for a move, as in the list. */
@@ -55,6 +58,10 @@ export interface OptionsEditorProps {
   onLabel: (id: OptionId, label: string) => void;
   /** Opens the emoji picker for the Option. */
   onPickEmoji: (id: OptionId) => void;
+  /** The Option whose emoji picker is unfolded under its row, if any. */
+  emojiOpenFor?: OptionId | null;
+  /** The picker that unfolds under an Option's row (an InlinePicker, open or closed). */
+  renderEmojiPicker?: (id: OptionId) => ReactNode;
   /** Called on blur of a label, so an edit form can save at once. */
   onBlurField?: () => void;
   onAdd: () => OptionId;
@@ -92,6 +99,10 @@ export function OptionsEditor(props: OptionsEditorProps) {
     options: ["Buttons", "Gestures", "Gestures, with a hint"],
   });
   const gestures = touch !== "Buttons";
+  // The fills of a scale rise when the rows are already there (a switch from a choice, a new
+  // row), not when the editor first appears.
+  const [settled, setSettled] = useState(false);
+  useEffect(() => setSettled(true), []);
 
   // A keyboard move re-inserts the row, which takes the focus off its handle: give it back.
   useLayoutEffect(() => {
@@ -137,7 +148,10 @@ export function OptionsEditor(props: OptionsEditorProps) {
   return (
     <div>
       <SectionLabel id={labelId}>
-        {kind === "scale" ? "Options, from the lightest to the fullest" : "Options"}
+        <RollingText
+          text={kind === "scale" ? "Options, from the lightest to the fullest" : "Options"}
+          reduceMotion={reduceMotion}
+        />
       </SectionLabel>
       {touch === "Gestures, with a hint" ? (
         <p className="-mt-1 mb-2 hidden text-[0.875rem] leading-5 text-ink-3 pointer-coarse:block">
@@ -175,6 +189,7 @@ export function OptionsEditor(props: OptionsEditorProps) {
                   canRemove={shown.length > limits.min}
                   intensity={kind === "scale" ? scaleIntensity(options, option.id) : undefined}
                   hintId={hintId}
+                  rise={settled}
                   gestures={gestures}
                   reduceMotion={reduceMotion}
                   labelRef={(element) => {
@@ -240,6 +255,7 @@ function OptionRow({
   intensity,
   color,
   hintId,
+  rise,
   gestures,
   reduceMotion,
   labelRef,
@@ -248,6 +264,8 @@ function OptionRow({
   onEnter,
   onLabel,
   onPickEmoji,
+  emojiOpenFor,
+  renderEmojiPicker,
   onBlurField,
   onRemove,
 }: OptionsEditorProps & {
@@ -257,6 +275,7 @@ function OptionRow({
   canRemove: boolean;
   intensity: number | undefined;
   hintId: string;
+  rise: boolean;
   gestures: boolean;
   reduceMotion: boolean;
   labelRef: (element: HTMLInputElement | null) => void;
@@ -326,14 +345,25 @@ function OptionRow({
             <div
               onTouchStart={gestures ? (liftOnHold as TouchEventHandler | undefined) : undefined}
               onContextMenu={gestures ? (event) => event.preventDefault() : undefined}
-              className="flex flex-none items-center gap-2 select-none [-webkit-touch-callout:none]"
+              className="flex flex-none items-center select-none [-webkit-touch-callout:none]"
             >
-              {intensity === undefined ? null : (
-                <DaySquare color={color} intensity={intensity} size="1.25rem" className="ml-1" />
-              )}
+              <AnimatePresence initial={false}>
+                {intensity === undefined ? null : (
+                  <ScaleLevel
+                    key="level"
+                    color={color}
+                    intensity={intensity}
+                    index={index}
+                    rise={rise}
+                    reduceMotion={reduceMotion}
+                  />
+                )}
+              </AnimatePresence>
               <EmojiButton
                 optionId={option.id}
                 emoji={option.emoji}
+                expanded={emojiOpenFor === undefined ? undefined : emojiOpenFor === option.id}
+                color={color}
                 label={name}
                 onPointerDown={() => {
                   lifted.current = false;
@@ -394,8 +424,104 @@ function OptionRow({
             </button>
           </motion.div>
         </motion.div>
+        {renderEmojiPicker?.(option.id)}
       </div>
     </motion.li>
+  );
+}
+
+/**
+ * The fill that an Option of a scale gives a day, before its emoji. When a choice turns into a
+ * scale, the squares open their room one row after the other and their fills rise to their levels,
+ * so the switch shows what a scale adds; back to a choice, they fold away. Under reduced motion,
+ * a fade.
+ */
+function ScaleLevel({
+  color,
+  intensity,
+  index,
+  rise,
+  reduceMotion,
+}: {
+  color: HabitColor;
+  intensity: number;
+  index: number;
+  rise: boolean;
+  reduceMotion: boolean;
+}) {
+  const delay = rise && !reduceMotion ? index * 0.04 : 0;
+  const [shown, setShown] = useState(rise ? 0 : intensity);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShown(intensity), delay * 1000 + 60);
+    return () => window.clearTimeout(timer);
+  }, [intensity, delay]);
+  return (
+    <motion.span
+      className="flex flex-none overflow-hidden"
+      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, width: 0 }}
+      animate={{
+        opacity: 1,
+        width: "auto",
+        transition: reduceMotion
+          ? FADE_IN
+          : {
+              width: { ...springs.morph, delay },
+              opacity: { duration: 0.2, ease: EASE_OUT, delay },
+            },
+      }}
+      exit={
+        reduceMotion
+          ? { opacity: 0, transition: FADE_OUT }
+          : { opacity: 0, width: 0, transition: { width: springs.morph, opacity: FADE_OUT } }
+      }
+    >
+      <span className="flex pr-2 pl-1">
+        <DaySquare color={color} intensity={shown} size="1.25rem" />
+      </span>
+    </motion.span>
+  );
+}
+
+/** A label that rolls to its new text, as the footer button does: the old one leaves upward. */
+function RollingText({ text, reduceMotion }: { text: string; reduceMotion: boolean }) {
+  return (
+    <span className="relative block overflow-hidden">
+      <AnimatePresence initial={false} mode="popLayout">
+        <motion.span
+          key={text}
+          className="block"
+          initial={
+            reduceMotion
+              ? { opacity: 0 }
+              : { opacity: 0, transform: "translateY(0.5rem)", filter: "blur(2px)" }
+          }
+          animate={{
+            opacity: 1,
+            transform: "translateY(0rem)",
+            filter: "blur(0px)",
+            transition: reduceMotion
+              ? FADE_IN
+              : {
+                  transform: springs.morph,
+                  opacity: { duration: 0.22, ease: EASE_OUT },
+                  filter: { duration: 0.22, ease: EASE_OUT },
+                },
+          }}
+          exit={
+            reduceMotion
+              ? { opacity: 0, transition: FADE_OUT }
+              : {
+                  opacity: 0,
+                  transform: "translateY(-0.5rem)",
+                  filter: "blur(2px)",
+                  transition: { duration: 0.14, ease: EASE_OUT },
+                }
+          }
+        >
+          {text}
+        </motion.span>
+      </AnimatePresence>
+    </span>
   );
 }
 
@@ -406,12 +532,17 @@ function OptionRow({
 function EmojiButton({
   optionId,
   emoji,
+  expanded,
+  color,
   label,
   onPointerDown,
   onClick,
 }: {
   optionId: OptionId;
   emoji: string | undefined;
+  /** Its picker is unfolded under the row: a ring in the habit color. */
+  expanded: boolean | undefined;
+  color: HabitColor;
   label: string;
   onPointerDown: () => void;
   onClick: () => void;
@@ -423,7 +554,9 @@ function EmojiButton({
       onPointerDown={onPointerDown}
       onClick={onClick}
       aria-label={emoji === undefined ? `Emoji for ${label}` : `Emoji for ${label}: ${emoji}`}
-      className="grid size-12 flex-none place-items-center squircle-[0.625rem] bg-field text-[1.0625rem] outline-none transition-[box-shadow,scale] duration-150 ease-out active:scale-[0.95] focus-visible:shadow-[inset_0_0_0_0.09375rem_var(--ink-4)]"
+      aria-expanded={expanded}
+      style={habitColorStyle(color)}
+      className="grid size-12 flex-none place-items-center squircle-[0.625rem] bg-field text-[1.0625rem] outline-none transition-[box-shadow,scale] duration-150 ease-out active:scale-[0.95] focus-visible:shadow-[inset_0_0_0_0.09375rem_var(--ink-4)] aria-expanded:shadow-[0_0_0_0.25rem_color-mix(in_oklab,var(--c)_50%,transparent)]"
     >
       {emoji ?? <SmileyIcon aria-hidden className="size-5 text-ink-3" />}
     </button>

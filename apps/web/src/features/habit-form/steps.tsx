@@ -57,6 +57,7 @@ export function Steps({
   step,
   direction,
   focus,
+  variants,
   children,
 }: {
   step: string;
@@ -67,6 +68,8 @@ export function Steps({
    * to. Without it, the focus stays on the sheet (the old step's control is gone).
    */
   focus?: string | undefined;
+  /** The motion of the steps, by the direction in `custom`. Default: the sideways step. */
+  variants?: Variants | undefined;
   children: ReactNode;
 }) {
   const reduceMotion = useReducedMotion() === true;
@@ -91,7 +94,7 @@ export function Steps({
           key={step}
           data-step={step}
           custom={direction}
-          variants={stepVariants(reduceMotion)}
+          variants={variants ?? stepVariants(reduceMotion)}
           initial="enter"
           animate="center"
           exit="exit"
