@@ -58,7 +58,10 @@
     pointer-events: auto;
   }
 
+  /* One stacking context for the tabs: the raised pill, at z-index -1, slides under the icons and
+     names of both tabs, not only of its own. */
   .dock-tabs {
+    isolation: isolate;
     display: flex;
     gap: 0.125rem;
     height: 3.5rem;
@@ -69,7 +72,6 @@
 
   .dock-tab {
     position: relative;
-    isolation: isolate;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -162,115 +164,50 @@
   }
 }
 
-/* ── A change of tab (index.tsx): the raised pill slides to the new tab under the tabs' icons and
-   names, which change their color in place; "New habit" stays; and the screen moves 1.5rem the
-   way the tabs go while it crossfades. The parts of the dock take their names only for this
-   transition, so the move to a habit's page (screens.css) never sees them. ── */
+/* ── A change of tab (index.tsx): the screen changes at once, and the content of the new one comes
+   in from 1.5rem on the side of its tab while it fades in. The dock stays: its raised pill slides
+   to the new tab with the lift spring (Motion, in index.tsx). Nothing covers the screen, so a tap
+   on a tab always lands, however fast the taps come. ── */
+
+/* The content starts 1.5rem to the side: clipped, it never widens the page, which a phone would
+   zoom out to show, moving the dock and the tabs under the finger. `clip`, not `hidden`, so the
+   list's sticky header still sticks. */
+[data-tab-enter] {
+  overflow-x: clip;
+}
 
 @media (prefers-reduced-motion: no-preference) {
-  :root:active-view-transition-type(tab-forward, tab-back) {
-    .dock-tabs {
-      view-transition-name: dock-tabs;
-    }
-
-    .dock-tab-pill {
-      view-transition-name: dock-tab-pill;
-    }
-
-    .dock-tab[data-tab="habits"] .dock-tab-content {
-      view-transition-name: dock-tab-habits;
-    }
-
-    .dock-tab[data-tab="settings"] .dock-tab-content {
-      view-transition-name: dock-tab-settings;
-    }
-
-    .dock-create {
-      view-transition-name: dock-create;
-    }
-
-    /* On a desktop the list has a group of its own (screens.css): here it moves with the screen. */
-    .screens-list .habit-list {
-      view-transition-name: none;
-    }
+  [data-tab-enter] > :not(.dock, .dock-room) {
+    animation: tab-enter-from-right 220ms var(--ease-out) both;
   }
 
-  ::view-transition-group(dock-tabs) {
-    z-index: 1;
-  }
-
-  ::view-transition-group(dock-tab-pill) {
-    z-index: 2;
-    /* The lift spring, as the chosen segment of the form's controls moves. */
-    animation-duration: var(--spring-lift-duration, 300ms);
-    animation-timing-function: var(--spring-lift-easing, var(--ease-out));
-  }
-
-  ::view-transition-group(dock-tab-habits),
-  ::view-transition-group(dock-tab-settings) {
-    z-index: 3;
-  }
-
-  ::view-transition-old(dock-tab-habits),
-  ::view-transition-new(dock-tab-habits),
-  ::view-transition-old(dock-tab-settings),
-  ::view-transition-new(dock-tab-settings) {
-    animation-duration: 200ms;
-    animation-timing-function: var(--ease-out);
-  }
-
-  ::view-transition-group(dock-create) {
-    z-index: 1;
-  }
-
-  :root:active-view-transition-type(tab-forward, tab-back)::view-transition-old(root),
-  :root:active-view-transition-type(tab-forward, tab-back)::view-transition-new(root) {
-    animation-duration: 260ms;
-    animation-timing-function: var(--ease-out);
-    animation-fill-mode: both;
-  }
-
-  :root:active-view-transition-type(tab-forward)::view-transition-old(root) {
-    animation-name: dock-out-left;
-  }
-
-  :root:active-view-transition-type(tab-forward)::view-transition-new(root) {
-    animation-name: dock-in-right;
-  }
-
-  :root:active-view-transition-type(tab-back)::view-transition-old(root) {
-    animation-name: dock-out-right;
-  }
-
-  :root:active-view-transition-type(tab-back)::view-transition-new(root) {
-    animation-name: dock-in-left;
+  [data-tab-enter="back"] > :not(.dock, .dock-room) {
+    animation-name: tab-enter-from-left;
   }
 }
 
-@keyframes dock-out-left {
-  to {
-    transform: translateX(-1.5rem);
-    opacity: 0;
+@media (prefers-reduced-motion: reduce) {
+  [data-tab-enter] > :not(.dock, .dock-room) {
+    animation: tab-fade-in 180ms var(--ease-out) both;
   }
 }
 
-@keyframes dock-in-right {
+@keyframes tab-enter-from-right {
   from {
-    transform: translateX(1.5rem);
+    translate: 1.5rem 0;
     opacity: 0;
   }
 }
 
-@keyframes dock-out-right {
-  to {
-    transform: translateX(1.5rem);
-    opacity: 0;
-  }
-}
-
-@keyframes dock-in-left {
+@keyframes tab-enter-from-left {
   from {
-    transform: translateX(-1.5rem);
+    translate: -1.5rem 0;
+    opacity: 0;
+  }
+}
+
+@keyframes tab-fade-in {
+  from {
     opacity: 0;
   }
 }

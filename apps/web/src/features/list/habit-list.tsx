@@ -26,7 +26,7 @@ import { preloadHabitIcons } from "@/components/habit-icon";
 import { haptic } from "@/components/haptics";
 import { entryRef, useOpenSheet, useSheetSearch } from "@/components/sheet-search";
 import { useIsWide } from "@/components/use-media-query";
-import { Dock } from "@/features/dock";
+import { Dock, useTabEnter } from "@/features/dock";
 import { HabitRow } from "@/features/list/habit-row";
 import { useRowEntrance } from "@/features/list/row-entrance";
 import { useToday } from "@/features/list/use-today";
@@ -50,6 +50,7 @@ export function HabitList({ pageOpen = false }: { pageOpen?: boolean }) {
   const days = useMemo(() => lastDays(today, wide ? 7 : 5), [today, wide]);
   const ignoreClicksUntil = useRef(0);
   const rows = useRef<HTMLDivElement>(null);
+  const tabEnter = useTabEnter();
 
   useEffect(() => preloadHabitIcons(habits.map((habit) => habit.icon)), [habits]);
   useOpenNewWhenEmpty(source !== "none" && habits.length === 0);
@@ -117,7 +118,7 @@ export function HabitList({ pageOpen = false }: { pageOpen?: boolean }) {
   }, []);
 
   return (
-    <div className="habit-list">
+    <div className="habit-list" data-tab-enter={tabEnter}>
       <h1 className="sr-only">Habits</h1>
       <DayHeader days={days} today={today} />
       <DndContext
