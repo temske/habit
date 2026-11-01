@@ -31,6 +31,12 @@ export const springs = {
 /** The start velocity of the pulse, in scale units per second (a peak of about 1.04). */
 export const PULSE_VELOCITY = 1.6;
 
+/**
+ * `--ease-out` of styles.css as a CSS easing string, for motion outside CSS: Web Animations
+ * (`element.animate`) and dnd-kit's transitions.
+ */
+export const easeOut = "cubic-bezier(0.23, 1, 0.32, 1)";
+
 /** Durations of the plain (non-spring) transitions, in milliseconds. */
 export const durations = {
   /** Press feedback on a control. */

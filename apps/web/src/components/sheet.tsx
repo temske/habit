@@ -292,19 +292,27 @@ function titleClass(hidden: boolean | undefined): string {
 
 /**
  * Animates its height to its content's height with the morph spring, so a sheet grows and shrinks
- * between steps instead of jumping. Under reduced motion the height changes at once.
+ * between steps instead of jumping. Under reduced motion the height changes at once. So does a
+ * change that typing makes (a note's field grows by a line): it follows the keys, so it must not
+ * lag behind them with a spring.
  */
 export function MorphHeight({ children, className }: { children: ReactNode; className?: string }) {
   const inner = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState<number | "auto">("auto");
+  const [size, setSize] = useState<{ height: number | "auto"; typed: boolean }>({
+    height: "auto",
+    typed: false,
+  });
   const reduceMotion = useReducedMotion() === true;
 
   useLayoutEffect(() => {
     const element = inner.current;
     if (element === null || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(([entry]) => {
-      const size = entry?.borderBoxSize[0]?.blockSize;
-      if (size !== undefined) setHeight(size);
+      const height = entry?.borderBoxSize[0]?.blockSize;
+      if (height === undefined) return;
+      const focused = document.activeElement;
+      const typed = focused instanceof HTMLTextAreaElement && element.contains(focused);
+      setSize({ height, typed });
     });
     observer.observe(element);
     return () => observer.disconnect();
@@ -316,8 +324,8 @@ export function MorphHeight({ children, className }: { children: ReactNode; clas
       // footer inside sticks to the sheet's own scroll.
       className={cn("overflow-clip", className)}
       initial={false}
-      animate={{ height }}
-      transition={reduceMotion ? { duration: 0 } : springs.morph}
+      animate={{ height: size.height }}
+      transition={reduceMotion || size.typed ? { duration: 0 } : springs.morph}
     >
       <div ref={inner}>{children}</div>
     </motion.div>

@@ -62,10 +62,13 @@ export function Dock({ current, canCreate = true }: { current: DockTab; canCreat
             >
               {tab === current ? (
                 // The dock of the new screen takes the pill over from the old one, which has gone.
+                // The radius is a style, not the class's, so Motion keeps the ends round while the
+                // pill stretches between two tabs of different widths.
                 <motion.span
                   layoutId={reduceMotion ? undefined : "dock-tab-pill"}
                   transition={springs.lift}
                   className="dock-tab-pill"
+                  style={{ borderRadius: 999 }}
                   aria-hidden
                 />
               ) : null}

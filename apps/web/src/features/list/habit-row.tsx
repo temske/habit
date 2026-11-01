@@ -6,6 +6,7 @@ import { useReducedMotion } from "motion/react";
 import { memo, type CSSProperties, type MouseEvent } from "react";
 
 import { HabitIcon } from "@/components/habit-icon";
+import { easeOut } from "@/components/motion";
 import { habitColorStyle } from "@/components/palette";
 import { DayCells, type DayCellsProps } from "@/features/list/day-cells";
 import { beforeScreenChange, screenTransition } from "@/features/screens/screen-transition";
@@ -49,7 +50,7 @@ export const HabitRow = memo(function HabitRow({
     id: habit.id,
     // The rows that make room, and the drop, move with the app's ease-out; under reduced motion
     // they move at once (the lifted row still follows the finger).
-    transition: reduceMotion ? null : { duration: 200, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+    transition: reduceMotion ? null : { duration: 200, easing: easeOut },
   });
   // The name stays a link: dnd kit's `role="button"` would hide that from screen readers.
   const { role: _role, ...sortableAttributes } = attributes;

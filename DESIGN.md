@@ -434,7 +434,7 @@ Empty and zero are both "frame only", but they differ: a recorded zero is data a
 
 - **Size:** a square plus a gap wide and a full row tall, so the touch target is about 44px.
 - **Press:** the gauge scales to 0.95 in 120ms. On touch the pressed look waits 60ms, so a scroll that starts on a square does not dip it.
-- **Hold:** on a number habit, a held square shrinks to 0.9 over 450ms, linearly, as the progress toward the input. A release returns it in 120ms with `--ease-out`.
+- **Hold:** on a number habit, a square presses to 0.95 in 120ms, as a check square does, and a hold adds a linear shrink on `scale`, to 0.9 in all, over the 450ms to the input, so a quick tap still gets the full press. A release returns both in 120ms with `--ease-out`. Under reduced motion nothing shrinks: a press dims the square to 70% and a hold dims it further over the hold, in the list and on the habit page.
 - **Focus:** the global 2px `ink-3` outline, inset by 0.25rem.
 - **Scroll:** the row of cells allows `pan-y`, so a vertical drag stays a scroll.
 

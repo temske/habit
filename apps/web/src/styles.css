@@ -1144,20 +1144,32 @@
     outline-offset: -0.25rem;
   }
 
+  /* A press: 0.95 in 120ms, on `transform`. A number square adds its hold on the `scale` property,
+     to 0.9 in all, linearly over the hold, as progress toward the input, so a quick tap still gets
+     the full press. On touch the press shows 60ms late, so the hold has the rest. A release returns
+     both in 120ms. The calendar's Days press the same way (habit-page.css). */
   .day-cell-press {
     display: block;
-    transition: transform 120ms var(--ease-out);
+    transition:
+      transform 120ms var(--ease-out),
+      scale 120ms var(--ease-out);
   }
 
   .day-cell[data-pressed] .day-cell-press {
     transform: scale(0.95);
   }
 
-  /* A number square under a held press shrinks for the whole hold, so the wait shows progress
-     toward the input; a release springs back in 120ms. */
   .day-cells[data-kind="number"] .day-cell[data-pressed] .day-cell-press {
-    transform: scale(0.9);
-    transition: transform 450ms linear;
+    scale: 0.947;
+    transition:
+      transform 120ms var(--ease-out),
+      scale 450ms linear;
+  }
+
+  .day-cells[data-kind="number"] .day-cell[data-pressed][data-late] .day-cell-press {
+    transition:
+      transform 120ms var(--ease-out),
+      scale 390ms linear;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -1168,9 +1180,34 @@
 
   @media (prefers-reduced-motion: reduce) {
     .habit-row[data-dragging] .habit-row-inner,
-    .day-cell[data-pressed] .day-cell-press,
-    .day-cells[data-kind="number"] .day-cell[data-pressed] .day-cell-press {
+    .day-cell[data-pressed] .day-cell-press {
       transform: none;
+    }
+
+    /* Without the shrink, a press dims the square instead, and a hold dims it further over the
+       hold, so the core action still answers the finger. */
+    .day-cell-press {
+      transition:
+        opacity 120ms var(--ease-out),
+        filter 120ms var(--ease-out);
+    }
+
+    .day-cell[data-pressed] .day-cell-press {
+      opacity: 0.7;
+    }
+
+    .day-cells[data-kind="number"] .day-cell[data-pressed] .day-cell-press {
+      scale: none;
+      filter: opacity(0.7);
+      transition:
+        opacity 120ms var(--ease-out),
+        filter 450ms linear;
+    }
+
+    .day-cells[data-kind="number"] .day-cell[data-pressed][data-late] .day-cell-press {
+      transition:
+        opacity 120ms var(--ease-out),
+        filter 390ms linear;
     }
   }
 }

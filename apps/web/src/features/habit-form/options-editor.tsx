@@ -39,7 +39,7 @@ import { flushSync } from "react-dom";
 import { DaySquare } from "@/components/day-square";
 import { haptic } from "@/components/haptics";
 import { useVariant } from "@/components/lab";
-import { springs } from "@/components/motion";
+import { easeOut, springs } from "@/components/motion";
 import { habitColorStyle } from "@/components/palette";
 import { cn } from "@/lib/utils";
 
@@ -287,7 +287,7 @@ function OptionRow({
     useSortable({
       id: option.id,
       // The neighbours make room with the app's ease-out; under reduced motion they move at once.
-      transition: reduceMotion ? null : { duration: 200, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+      transition: reduceMotion ? null : { duration: 200, easing: easeOut },
     });
   const { onTouchStart: liftOnHold, ...handleListeners } = listeners ?? {};
   const name = option.label.trim() || `option ${index + 1}`;

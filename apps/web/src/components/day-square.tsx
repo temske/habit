@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { durations, PULSE_VELOCITY, springs } from "@/components/motion";
+import { durations, easeOut, PULSE_VELOCITY, springs } from "@/components/motion";
 import { habitColorVar } from "@/components/palette";
 import { cn } from "@/lib/utils";
 
@@ -87,7 +87,7 @@ export const DaySquare = memo(function DaySquare({
     if (reduceMotion) {
       fill.animate([{ opacity: 0.35 }, { opacity: 1 }], {
         duration: durations.fade,
-        easing: EASE_OUT,
+        easing: easeOut,
       });
       return;
     }
@@ -128,8 +128,6 @@ export const DaySquare = memo(function DaySquare({
     </span>
   );
 });
-
-const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
 
 function clamp01(value: number): number {
   if (!Number.isFinite(value) || value <= 0) return 0;

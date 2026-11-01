@@ -2,7 +2,7 @@ import type { Habit } from "@habit/core";
 import { useReducedMotion } from "motion/react";
 import { useLayoutEffect, useRef, type RefObject } from "react";
 
-import { durations, morphTiming } from "@/components/motion";
+import { durations, easeOut, morphTiming } from "@/components/motion";
 
 /**
  * A habit made this long ago or less is new: it was created on this device a moment ago (the
@@ -17,9 +17,6 @@ export const NEW_HABIT_MS = 3000;
  * row grows into the room the sheet gives back.
  */
 const ENTRANCE_DELAY_MS = 120;
-
-/** `--ease-out` of styles.css. */
-const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
 
 /**
  * The habits that enter the list now: those not in `previous` and made in the last `NEW_HABIT_MS`.
@@ -70,7 +67,7 @@ function enter(row: HTMLElement, reduceMotion: boolean): void {
   if (reduceMotion) {
     content.animate([{ opacity: 0 }, { opacity: 1 }], {
       duration: durations.fade,
-      easing: EASE_OUT,
+      easing: easeOut,
       delay: ENTRANCE_DELAY_MS,
       fill: "backwards",
     });
@@ -90,7 +87,7 @@ function enter(row: HTMLElement, reduceMotion: boolean): void {
   content.animate([{ transform: "translateY(-0.75rem)" }, { transform: "none" }], spring);
   content.animate([{ opacity: 0 }, { opacity: 1 }], {
     duration: 240,
-    easing: EASE_OUT,
+    easing: easeOut,
     delay: ENTRANCE_DELAY_MS,
     fill: "backwards",
   });
