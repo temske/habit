@@ -1,6 +1,7 @@
 import { createRouter, type RouterHistory } from "@tanstack/react-router";
 
 import { WIDE_QUERY } from "@/components/use-media-query";
+import { AppErrorScreen } from "@/features/app-error";
 import { routeTree } from "@/routeTree.gen";
 
 /** The app's router; tests pass a memory history. */
@@ -9,6 +10,8 @@ export function createAppRouter(history?: RouterHistory) {
   return createRouter({
     routeTree,
     ...(history === undefined ? {} : { history }),
+    // An error that a screen does not handle: a calm screen with "Reload", not the router's own.
+    defaultErrorComponent: AppErrorScreen,
     // A new screen starts at the top, and the back gesture returns to a screen where it was left
     // (the list keeps its scroll). A sheet (`?new`, `?edit`, `?entry`) changes only the search
     // params of the same screen: it leaves the scroll alone, also when it closes. On a desktop the

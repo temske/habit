@@ -26,10 +26,12 @@ function onDevInstance(): boolean {
 
 /**
  * Signed out: the mark, the name, and one action, "Continue with Google". A sign-in with an email
- * code is one tap further on the development instance, so the test users can sign in, and in the
- * installed app on any instance: on iOS, Google's page opens in a Safari sheet that does not share
- * its cookies with the installed app, so the sign-in there does not reach the app
- * (docs/notes/pwa.md).
+ * code is one tap further on the development instance, so the test users can sign in.
+ *
+ * The installed app offers the email code alone, on any instance. Google's page is on another
+ * origin, and a Home Screen app on iOS opens a page outside its scope in a browser view with bars;
+ * the bars stay when the sign-in comes back to the app. The session also lands in a Safari sheet
+ * whose cookies the app does not share. The email code runs inside the app (docs/notes/pwa.md).
  */
 export function SignInScreen({
   signIn,
@@ -55,19 +57,21 @@ export function SignInScreen({
   return (
     <AuthScreen filled title="Habit">
       <div className="flex w-full flex-col items-stretch gap-3">
-        <AuthButton
-          aria-busy={opening}
-          disabled={opening}
-          onClick={() => {
-            setOpening(true);
-            signIn();
-          }}
-        >
-          <GoogleLogoIcon weight="bold" className="size-4.5" aria-hidden />
-          {opening ? "Opening Google…" : "Continue with Google"}
-        </AuthButton>
+        {installed ? null : (
+          <AuthButton
+            aria-busy={opening}
+            disabled={opening}
+            onClick={() => {
+              setOpening(true);
+              signIn();
+            }}
+          >
+            <GoogleLogoIcon weight="bold" className="size-4.5" aria-hidden />
+            {opening ? "Opening Google…" : "Continue with Google"}
+          </AuthButton>
+        )}
         {(devInstance || installed) && emailCode !== undefined ? (
-          <EmailCodeSection emailCode={emailCode} testUsers={devInstance} />
+          <EmailCodeSection emailCode={emailCode} testUsers={devInstance} primary={installed} />
         ) : null}
       </div>
     </AuthScreen>
@@ -85,14 +89,17 @@ type Step = { name: "closed" } | { name: "email" } | { name: "code"; email: stri
 
 /**
  * A sign-in with a code from an email, in two short steps. `testUsers`: a note that names the test
- * users of the development instance.
+ * users of the development instance. `primary`: the only way to sign in, so it opens from the
+ * primary button, not from a quiet link under Google.
  */
 function EmailCodeSection({
   emailCode,
   testUsers,
+  primary,
 }: {
   emailCode: EmailCodeSignIn;
   testUsers: boolean;
+  primary: boolean;
 }) {
   const [step, setStep] = useState<Step>({ name: "closed" });
   const [email, setEmail] = useState("");
@@ -140,13 +147,19 @@ function EmailCodeSection({
   return (
     <MorphHeight className="-mx-1 px-1">
       {step.name === "closed" ? (
-        <button
-          type="button"
-          className="auth-quiet-link mx-auto mt-1"
-          onClick={() => setStep({ name: "email" })}
-        >
-          Sign in with an email code
-        </button>
+        primary ? (
+          <AuthButton className="w-full" onClick={() => setStep({ name: "email" })}>
+            Sign in with an email code
+          </AuthButton>
+        ) : (
+          <button
+            type="button"
+            className="auth-quiet-link mx-auto mt-1"
+            onClick={() => setStep({ name: "email" })}
+          >
+            Sign in with an email code
+          </button>
+        )
       ) : step.name === "email" ? (
         <form className="flex flex-col gap-3 pt-5" onSubmit={sendCode} noValidate>
           <label htmlFor={`${ids}-email`} className="sr-only">

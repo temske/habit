@@ -37,6 +37,16 @@ function clerkPreconnect(): Plugin {
   };
 }
 
+// Vercel gives the build its system variables also with the `VITE_` prefix: the commit's SHA and
+// message, the deployment's id and URL. Clerk reads `import.meta.env[name]`, so the bundle holds
+// all of `import.meta.env`, and these values changed the main chunk at each deploy, also of a
+// commit that changed no code. Each new name of that chunk renamed the chunks that import it, so
+// an open app missed its chunks after every merge. The app reads none of them. Without them, the
+// same code builds the same files.
+for (const name of Object.keys(process.env)) {
+  if (name.startsWith("VITE_VERCEL_")) delete process.env[name];
+}
+
 export default defineConfig({
   // The router plugin must run before React's.
   plugins: [
