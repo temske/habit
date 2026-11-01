@@ -15,7 +15,6 @@ The route is `apps/web/src/routes/habits.$habitId.tsx`. The page is in
 | `month-calendar.tsx` | The calendar: one Month per page, and all its input (tap, hold and paint, long press, keyboard). |
 | `use-month-pager.ts` | The paging of the calendar: the drag, the rubber band, the settle with the sheet spring, the instant change from the keyboard. |
 | `use-edited-day-in-view.ts` | On a phone, keeps the Day that the input sheet edits above the sheet. |
-| `plate-transition.ts` | The shared-element transition from a list row to the title of the page. |
 | `months.ts` | The Month math: the weeks of a Month, the columns and Months of the grid, the Month names. |
 | `habit-page.css` | The styles, in the world of `styles.css` (DESIGN.md). |
 | `habit-page.test.tsx`, `months.test.ts` | Behaviour tests (Testing Library on `FakeHabitDataProvider`) and the Month math. |
@@ -54,14 +53,20 @@ The route is `apps/web/src/routes/habits.$habitId.tsx`. The page is in
 - **The Day under edit.** It rises above the scrim with a ring in the habit color, as in the list.
   On a phone the page rises with the sheet's spring until the Day is just above the sheet, and
   comes back when the sheet closes.
-- **From the list.** A tap on a row's name opens the page with a view transition: the row's icon and
-  name grow into the title in 320 ms with the strong ease-out, and the rest crossfades in 200 ms.
-  While a view transition runs, the browser gives every tap to the document
+- **From the list.** A tap on a row's name opens the page with a view transition
+  (`features/screens/screen-transition.ts`). On a phone it is a push, as in a native app: the page
+  slides in from the right over the list, and the list moves 30% to the left and dims. Back, and the
+  browser's back and forward, play the reverse, unless the browser animates the change itself (the
+  back swipe on iOS). The direction is a view transition type (`screen-push`, `screen-pop`) that
+  screens.css reads. While a view transition runs, the browser gives every tap to the document
   (docs/notes/integration.md). So a finger that lands during the transition ends it at once, and
-  its tap clicks the control under it when the page is in place: a quick tap on a Day counts. Only list to
-  page animates (the way back is the back gesture, which on iOS slides the page already). Under
+  its tap clicks the control under it when the page is in place: a quick tap on a Day counts. Under
   reduced motion the screens only crossfade. A browser without view transitions navigates
   without it.
+
+  Until November 2026 the row's icon and name grew into the title (a shared-element "plate"
+  transition). On a phone the title flew across the screen, and the owner asked for a native push
+  instead.
 - **Motion** follows DESIGN.md: a Day presses to 0.95 in 120 ms, a hold shrinks it to 0.9 over
   the time to the paint or the input, the pages settle with the sheet spring and the finger's
   speed. Under reduced motion a new page fades in, and a dragged page snaps without a fade.
@@ -75,8 +80,8 @@ Each is in its own commit, with the reason in the body.
   a scrolled list jumped to the top under a sheet. Now a change of the search params alone does
   not change the scroll. A new screen starts at the top. The back gesture returns to a screen
   where it was left (`scrollRestoration` as a function).
-- **`apps/web/src/features/list/habit-row.tsx`: the view transition.** The row's link asks for a
-  view transition and names its icon and name on a plain click (`markPlate`).
+- **`apps/web/src/features/list/habit-row.tsx`: the view transition.** The row's link asks for the
+  screen transition (`screenTransition`) and lets a tap through while it runs.
 - **`apps/web/src/routeTree.gen.ts`**: generated for the new route.
 
 ## Checks
@@ -142,7 +147,7 @@ these:
 - the 200 ms hold before a paint, against a quick swipe
 - that a paint never scrolls the page
 - the haptics
-- the view transition in Safari 18
+- the push between the list and a page in Safari, and that the back swipe does not play it twice
 - the page that rises above the input sheet, with the keyboard open (the text Kind).
 
 ## Findings of the integration milestone

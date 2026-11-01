@@ -143,11 +143,11 @@ export function MonthCalendar({ habit, today, month, onMonthChange }: MonthCalen
   const pickerAnchor = useRef<HTMLButtonElement>(null);
   const reduceMotion = useReducedMotion() === true;
   const pager = useMonthPager({ month, newest, onMonthChange, reduceMotion });
-  // Two ways to another Month, to compare in the lab: the picker in a sheet, and the calendar that
-  // zooms out to the months of its year.
+  // Two ways to another Month, to compare in the lab: the calendar that zooms out to the months of
+  // its year (the default), and the picker in a sheet.
   const picker = useVariant("month-picker", {
     label: "Month picker",
-    options: ["Sheet", "Zoom out"],
+    options: ["Zoom out", "Sheet"],
   });
   const zoom = useMonthZoom({
     month,

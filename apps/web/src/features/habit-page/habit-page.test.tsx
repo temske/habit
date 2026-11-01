@@ -188,6 +188,7 @@ test("a Month in the grid moves the calendar there; the arrows and Today page", 
 });
 
 test("the picker moves the calendar to a month of any year, never past this month", async () => {
+  act(() => setValue("month-picker", "Sheet"));
   const router = renderPage(demoHabitIds.water);
 
   await screen.findByRole("heading", { name: "October 2026" });
@@ -215,7 +216,6 @@ test("the picker moves the calendar to a month of any year, never past this mont
 });
 
 test("the calendar zooms out to the months of its year, and into any of them", async () => {
-  act(() => setValue("month-picker", "Zoom out"));
   renderPage(demoHabitIds.water);
 
   await screen.findByRole("heading", { name: "October 2026" });

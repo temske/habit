@@ -1,7 +1,9 @@
-import { Outlet, useMatch } from "@tanstack/react-router";
+import { Outlet, useMatch, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { useIsWide } from "@/components/use-media-query";
 import { HabitList } from "@/features/list/habit-list";
+import { animateTraversals } from "@/features/screens/screen-transition";
 
 import "@/features/screens/screens.css";
 
@@ -10,10 +12,12 @@ import "@/features/screens/screens.css";
  * screen in place of the list. On a desktop it opens beside the list, and the list makes room for
  * it as the window narrows: it drops the Days first, then the names, and keeps the icons
  * (screens.css). Each of the two columns scrolls by itself, so the list keeps its place while pages
- * change beside it.
+ * change beside it. A change between the list and a page plays a transition (screen-transition.ts).
  */
 export function Screens() {
   const wide = useIsWide();
+  const router = useRouter();
+  useEffect(() => animateTraversals(router), [router]);
   const habitId = useMatch({
     from: "/_screens/habits/$habitId",
     shouldThrow: false,

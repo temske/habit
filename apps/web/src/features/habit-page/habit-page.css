@@ -97,13 +97,14 @@
     }
   }
 
-  /* ── The identity plate: the list row's icon and name, at the size of a title ── */
+  /* ── The title: the icon and the name ── */
 
+  /* Close under the status bar, as the list's day header is. */
   .hp-identity {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    padding: calc(env(safe-area-inset-top, 0px) + 2rem) var(--gutter) 0;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) var(--gutter) 0;
   }
 
   .hp-identity > :first-child {
@@ -122,15 +123,6 @@
     text-wrap: balance;
   }
 
-  /* The plate of the list row grows into this title (plate-transition.ts). */
-  .hp-identity-icon {
-    view-transition-name: habit-plate-icon;
-  }
-
-  .hp-name {
-    view-transition-name: habit-plate-name;
-  }
-
   .hp-description {
     margin: 0.125rem var(--gutter) 0 calc(var(--gutter) + var(--hp-icon) + 0.75rem);
     color: var(--ink-3);
@@ -139,10 +131,17 @@
     overflow-wrap: anywhere;
   }
 
-  /* A habit with no description keeps the room of one (its margin and its line), so the grid and
-     the calendar stay in place when the page changes to another habit. */
-  .hp-identity + .hp-year {
-    margin-top: calc(0.125rem + 1.375rem + 1.75rem);
+  /* On a desktop, where the page changes to another habit in place, a habit with no description
+     keeps the room of one (its margin and its line), so the grid and the calendar stay where they
+     were. A phone shows one page at a time and keeps the room for the Days. */
+  @media (min-width: 40em) {
+    .hp-identity {
+      padding-top: 1.5rem;
+    }
+
+    .hp-identity + .hp-year {
+      margin-top: calc(0.125rem + 1.375rem + 1.25rem);
+    }
   }
 
   /* ── The grid of the last 12 months ── */
@@ -151,7 +150,7 @@
      rest the grid lines up with the gutter. */
   .hp-year {
     display: flex;
-    margin-top: 1.75rem;
+    margin-top: 1.25rem;
     padding: 0 var(--gutter);
     overflow-x: auto;
     overscroll-behavior-x: contain;
@@ -799,43 +798,5 @@
     .hp-day[data-pressed] .hp-day-press {
       scale: none;
     }
-
-    /* The list row's plate does not move: the screens only crossfade. */
-    .hp-identity-icon,
-    .hp-name {
-      view-transition-name: none;
-    }
-  }
-}
-
-/* ── The transition from a list row: the plate moves in 320ms with the strong ease-out, and its
-   old and new pictures cross quickly, so the scaled text is never seen for long; the rest of the
-   screen crossfades. It is short on purpose: while it runs, a tap reaches no element of the page
-   (a spring would hold the screen for 550ms to settle its last pixel). ── */
-
-::view-transition-group(habit-plate-icon),
-::view-transition-group(habit-plate-name) {
-  animation-duration: 320ms;
-  animation-timing-function: var(--ease-out);
-}
-
-::view-transition-old(habit-plate-icon),
-::view-transition-new(habit-plate-icon),
-::view-transition-old(habit-plate-name),
-::view-transition-new(habit-plate-name) {
-  animation-duration: 180ms;
-  animation-timing-function: var(--ease-out);
-}
-
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 200ms;
-  animation-timing-function: var(--ease-out);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation-duration: 180ms;
   }
 }
