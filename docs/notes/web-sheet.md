@@ -12,7 +12,10 @@ reach it, so the band stayed white over a dimmed page.
 
 While a bottom sheet is open, `components/theme-color.ts` sets each `theme-color` tag to its
 color under the scrim: white under 20% black is `#cccccc`; black under 60% black stays black. The
-color moves in 400ms, in step with the scrim's fade, and comes back when the sheet starts to close.
+color moves on the scrim's own timing, 260ms on `--ease-drawer` (the curve computed in JS), and
+comes back when the sheet starts to close. When the scrim's fade changed to 260ms and the status
+bar kept 400ms, the band above the page dimmed more slowly than the page: the owner saw the scrim
+darken unevenly as a sheet came and went.
 
 Not known: whether iOS 26 repaints the status bar of an installed app when `theme-color` changes
 at run time. Safari 15 to 18 did for its own bars. Reports say that Safari 26 ignores
