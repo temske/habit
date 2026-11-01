@@ -2,7 +2,7 @@ import { useAuth } from "@habit/data";
 import { SignOutIcon } from "@phosphor-icons/react/dist/csr/SignOut";
 import { useState } from "react";
 
-import { Dock } from "@/features/dock";
+import { Dock, useTabEnter } from "@/features/dock";
 import { SheetButton } from "@/features/habit-form/controls";
 
 import "@/features/settings/settings.css";
@@ -15,9 +15,10 @@ import "@/features/settings/settings.css";
 export function SettingsPage() {
   const auth = useAuth();
   const [signingOut, setSigningOut] = useState(false);
+  const tabEnter = useTabEnter();
 
   return (
-    <div className="settings-screen">
+    <div className="settings-screen" data-tab-enter={tabEnter}>
       <main className="settings-page">
         <h1 className="settings-title">Settings</h1>
         <section className="settings-section" aria-labelledby="settings-account">
