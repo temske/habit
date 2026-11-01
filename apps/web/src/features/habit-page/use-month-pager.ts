@@ -4,15 +4,13 @@ import { useMotionValue, type MotionValue } from "motion/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
-import { durations, springs } from "@/components/motion";
+import { durations, easeOut, springs } from "@/components/motion";
 
 /** A page of the pager: a Month at a slot (-1 left, 0 shown, 1 right). */
 export interface PagerSlot {
   month: Month;
   slot: -1 | 0 | 1;
 }
-
-const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
 
 /** How far a release projects the finger's speed, in seconds: a flick goes to the next page. */
 const PROJECTION_S = 0.2;
@@ -100,7 +98,7 @@ export function useMonthPager({
     fadeIn.current = false;
     trackRef.current
       ?.querySelector('[data-slot="0"]')
-      ?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: durations.fade, easing: EASE_OUT });
+      ?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: durations.fade, easing: easeOut });
   }, [shown, x]);
 
   useEffect(() => {

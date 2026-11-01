@@ -251,7 +251,7 @@
   /* The ground alone at first; the empty mark fades in only when the start is slow (a start
      with a snapshot, or a sign-in check, takes well under a second). */
   .auth-loading .auth-screen {
-    animation: auth-fade-in 400ms var(--ease-out) 1s both;
+    animation: auth-fade-in 250ms var(--ease-out) 1s both;
   }
 
   /* The app is complete under the frame: the frame fades out over it, the mark with it (if it
@@ -262,7 +262,7 @@
     z-index: 60;
     background: var(--ground);
     pointer-events: none;
-    animation: auth-fade-out 400ms var(--ease-out) both;
+    animation: auth-fade-out 250ms var(--ease-out) both;
   }
 
   @keyframes auth-fade-out {

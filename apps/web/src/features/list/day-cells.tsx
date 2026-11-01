@@ -75,7 +75,8 @@ export function DayCells({
   onPaint,
 }: DayCellsProps) {
   const gesture = useRef<Gesture>({ type: "idle" });
-  const [pressed, setPressed] = useState<Day | null>(null);
+  // The pressed Day, and whether its press showed late (on touch), so the hold has less time left.
+  const [pressed, setPressed] = useState<{ day: Day; late: boolean } | null>(null);
   // The Day whose value the input sheet edits: it stays visible above the sheet's scrim.
   const { entry: editing } = useSheetSearch();
   const [paint, setPaint] = useState<{ mode: "set" | "clear"; days: Day[] } | null>(null);
@@ -116,10 +117,10 @@ export function DayCells({
       timer,
       pressTimer:
         event.pointerType === "touch"
-          ? window.setTimeout(() => setPressed(day), TOUCH_PRESS_DELAY_MS)
+          ? window.setTimeout(() => setPressed({ day, late: true }), TOUCH_PRESS_DELAY_MS)
           : undefined,
     };
-    if (event.pointerType !== "touch") setPressed(day);
+    if (event.pointerType !== "touch") setPressed({ day, late: false });
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -220,7 +221,8 @@ export function DayCells({
             type="button"
             className="day-cell"
             data-day={day}
-            data-pressed={pressed === day ? "" : undefined}
+            data-pressed={pressed?.day === day ? "" : undefined}
+            data-late={pressed?.day === day && pressed.late ? "" : undefined}
             aria-label={`${formatDayLong(day)}: ${describeEntry(habit, value)}`}
             aria-pressed={habit.kind === "check" ? value !== undefined : undefined}
             aria-haspopup={habit.kind === "check" || habit.kind === "number" ? undefined : "dialog"}

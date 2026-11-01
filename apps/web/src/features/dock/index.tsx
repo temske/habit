@@ -3,7 +3,7 @@ import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
 import { RowsIcon } from "@phosphor-icons/react/dist/csr/Rows";
 import { Link, useNavigate, type LinkProps } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { springs } from "@/components/motion";
 import { useOpenSheet, useSheetSearch } from "@/components/sheet-search";
@@ -32,10 +32,10 @@ const TABS: {
  * it and fades out above it.
  *
  * A tab changes the screen in place, with no entry in the history, so the back gesture never walks
- * through the tabs. The screen changes at once: the raised pill slides to the new tab, and the new
- * screen's content comes in a little from the side of its tab (`useTabEnter`, dock.css). It is not
- * a view transition: one takes every tap while it runs, so fast taps on the tabs were lost. On a
- * keyboard, N opens "New habit" and the comma opens the settings.
+ * through the tabs. The screen changes at once, as a tab bar on iOS does: only the raised pill
+ * slides to the new tab. The content does not move, because a change of tab is frequent and the
+ * pill already shows the direction. On a keyboard, N opens "New habit" and the comma opens the
+ * settings.
  *
  * `canCreate` is false until the habits have come, so "New habit" never opens on a list that
  * is not there yet.
@@ -43,7 +43,7 @@ const TABS: {
 export function Dock({ current, canCreate = true }: { current: DockTab; canCreate?: boolean }) {
   const openSheet = useOpenSheet();
   const reduceMotion = useReducedMotion() === true;
-  useDockKeys(current, canCreate);
+  useDockKeys(canCreate);
 
   return (
     <>
@@ -55,7 +55,6 @@ export function Dock({ current, canCreate = true }: { current: DockTab; canCreat
               key={tab}
               to={to}
               replace
-              onClick={() => noteTabChange(current, tab)}
               className="dock-tab"
               data-tab={tab}
               aria-current={tab === current ? "page" : undefined}
@@ -63,10 +62,13 @@ export function Dock({ current, canCreate = true }: { current: DockTab; canCreat
             >
               {tab === current ? (
                 // The dock of the new screen takes the pill over from the old one, which has gone.
+                // The radius is a style, not the class's, so Motion keeps the ends round while the
+                // pill stretches between two tabs of different widths.
                 <motion.span
                   layoutId={reduceMotion ? undefined : "dock-tab-pill"}
                   transition={springs.lift}
                   className="dock-tab-pill"
+                  style={{ borderRadius: 999 }}
                   aria-hidden
                 />
               ) : null}
@@ -93,42 +95,11 @@ export function Dock({ current, canCreate = true }: { current: DockTab; canCreat
   );
 }
 
-type TabDirection = "forward" | "back";
-
-/** The last change of tab: its direction (`forward` to a tab at the right) and its time. */
-let lastTabChange: { direction: TabDirection; at: number } | null = null;
-
-/** How long after a tap on a tab its screen counts as entering. */
-const TAB_ENTER_WINDOW_MS = 600;
-
-function noteTabChange(from: DockTab, to: DockTab): void {
-  if (from === to) return;
-  const order = (tab: DockTab) => TABS.findIndex((entry) => entry.tab === tab);
-  lastTabChange = {
-    direction: order(to) > order(from) ? "forward" : "back",
-    at: performance.now(),
-  };
-}
-
-/**
- * For the root of a screen with a dock: the side its content comes in from when a tab has just
- * opened it, as `data-tab-enter`, or undefined when it opened otherwise (a load, the way back from
- * a habit's page). Read once, when the screen mounts, so a later render never plays it again.
- */
-export function useTabEnter(): TabDirection | undefined {
-  const [direction] = useState(() =>
-    lastTabChange !== null && performance.now() - lastTabChange.at < TAB_ENTER_WINDOW_MS
-      ? lastTabChange.direction
-      : undefined,
-  );
-  return direction;
-}
-
 /**
  * N opens "New habit", and the comma opens the settings. Not while a sheet is open or a field has
  * the focus, and not with Cmd, Ctrl or Alt (Cmd+N is the browser's).
  */
-function useDockKeys(current: DockTab, canCreate: boolean) {
+function useDockKeys(canCreate: boolean) {
   const openSheet = useOpenSheet();
   const navigate = useNavigate();
   const search = useSheetSearch();
@@ -145,11 +116,10 @@ function useDockKeys(current: DockTab, canCreate: boolean) {
         openSheet({ new: true });
       } else if (event.key === ",") {
         event.preventDefault();
-        noteTabChange(current, "settings");
         void navigate({ to: "/settings", replace: true });
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [canCreate, current, navigate, openSheet, sheetOpen]);
+  }, [canCreate, navigate, openSheet, sheetOpen]);
 }

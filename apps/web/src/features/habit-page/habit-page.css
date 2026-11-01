@@ -1,3 +1,11 @@
+/* The calendar sets `--rows` on its viewport at each frame of a slide between Months. Only the
+   viewport reads it, so it does not inherit: else each frame restyles every Day of the pages. */
+@property --rows {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 5;
+}
+
 /*
  * The page of a habit, in the world of the list (styles.css): a ground with no surfaces, space
  * instead of lines, and color only where it is data. The measures are in rem, so the desktop's
@@ -791,6 +799,47 @@
 
     .hp-day[data-pressed] .hp-day-press {
       scale: none;
+    }
+
+    /* Without the shrink, a press dims the Day and a hold dims it further, as in the list
+       (styles.css). */
+    .hp-day-press {
+      transition:
+        opacity 120ms var(--ease-out),
+        filter 120ms var(--ease-out);
+    }
+
+    .hp-day[data-pressed] .hp-day-press {
+      opacity: 0.7;
+    }
+
+    .hp-day[data-pressed="paint"] .hp-day-press,
+    .hp-day[data-pressed="input"] .hp-day-press {
+      filter: opacity(0.7);
+    }
+
+    .hp-day[data-pressed="paint"] .hp-day-press {
+      transition:
+        opacity 120ms var(--ease-out),
+        filter 200ms linear;
+    }
+
+    .hp-day[data-pressed="paint"][data-late] .hp-day-press {
+      transition:
+        opacity 120ms var(--ease-out),
+        filter 140ms linear;
+    }
+
+    .hp-day[data-pressed="input"] .hp-day-press {
+      transition:
+        opacity 120ms var(--ease-out),
+        filter 450ms linear;
+    }
+
+    .hp-day[data-pressed="input"][data-late] .hp-day-press {
+      transition:
+        opacity 120ms var(--ease-out),
+        filter 390ms linear;
     }
   }
 }

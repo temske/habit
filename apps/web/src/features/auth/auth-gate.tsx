@@ -15,7 +15,7 @@ import { SignInScreen } from "@/features/auth/sign-in";
 export const START_ICONS_TIMEOUT_MS = 2000;
 
 /** The fade of the loading frame over the app (`.auth-loading[data-leaving]` in auth.css). */
-const LEAVE_MS = 400;
+const LEAVE_MS = 250;
 
 /**
  * Shows the app to the owner only. The other states of the sign-in get their own screen: a quiet

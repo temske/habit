@@ -250,11 +250,11 @@
   }
 
   ::view-transition-new(screens-page):only-child {
-    animation: screens-fade-in 180ms ease both;
+    animation: screens-fade-in 180ms var(--ease-out) both;
   }
 
   ::view-transition-old(screens-page):only-child {
-    animation: screens-fade-out 180ms ease both;
+    animation: screens-fade-out 180ms var(--ease-out) both;
   }
 }
 

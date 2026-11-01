@@ -456,12 +456,17 @@ export function MonthCalendar({ habit, today, month, onMonthChange }: MonthCalen
   useLayoutEffect(() => {
     const viewport = pager.viewportRef.current;
     if (viewport === null) return;
+    // Written only when it changes: between two Months with as many weeks, never.
+    let rows = "";
     const update = (x: number) => {
       const from = monthWeeks(pager.shown).length;
       const neighbour = slotsRef.current.find((page) => page.slot === (x < 0 ? 1 : -1));
       const to = neighbour === undefined ? from : monthWeeks(neighbour.month).length;
       const progress = Math.min(Math.abs(x) / (viewport.clientWidth || 1), 1);
-      viewport.style.setProperty("--rows", String(from + (to - from) * progress));
+      const next = String(from + (to - from) * progress);
+      if (next === rows) return;
+      rows = next;
+      viewport.style.setProperty("--rows", next);
     };
     update(pager.x.get());
     return pager.x.on("change", update);

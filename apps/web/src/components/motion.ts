@@ -31,6 +31,49 @@ export const springs = {
 /** The start velocity of the pulse, in scale units per second (a peak of about 1.04). */
 export const PULSE_VELOCITY = 1.6;
 
+/**
+ * The pulse as keyframes of `scale`: the pulse spring from rest at 1, with PULSE_VELOCITY, sampled
+ * at 120 frames a second until it settles (about 330ms).
+ */
+const pulseFrames = (() => {
+  const step = 1000 / 120;
+  const generator = spring({ keyframes: [1, 1], velocity: PULSE_VELOCITY, ...springs.pulse });
+  const values: number[] = [];
+  for (let time = 0; time <= 2000; time += step) {
+    const state = generator.next(time);
+    values.push(state.value);
+    if (state.done) break;
+  }
+  values[values.length - 1] = 1;
+  return { values, duration: (values.length - 1) * step };
+})();
+
+/**
+ * Plays the pulse on an element: a rising value springs it to about 1.04, and it settles. It is a
+ * Web Animation of `transform`, which the browser can run off the main thread, so the pulse stays
+ * smooth while the tap that caused it re-renders the screen. Motion's `scale` would run on the main
+ * thread. A new pulse replaces the one that still runs. Nothing happens where Web Animations are
+ * missing (jsdom).
+ */
+export function playPulse(element: HTMLElement): void {
+  if (typeof element.animate !== "function") return;
+  pulses.get(element)?.cancel();
+  const animation = element.animate(
+    pulseFrames.values.map((value) => ({ transform: `scale(${value})` })),
+    { duration: pulseFrames.duration, easing: "linear" },
+  );
+  pulses.set(element, animation);
+}
+
+/** The pulse that each element plays, or played last. */
+const pulses = new WeakMap<HTMLElement, Animation>();
+
+/**
+ * `--ease-out` of styles.css as a CSS easing string, for motion outside CSS: Web Animations
+ * (`element.animate`) and dnd-kit's transitions.
+ */
+export const easeOut = "cubic-bezier(0.23, 1, 0.32, 1)";
+
 /** Durations of the plain (non-spring) transitions, in milliseconds. */
 export const durations = {
   /** Press feedback on a control. */

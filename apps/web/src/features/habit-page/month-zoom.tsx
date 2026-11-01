@@ -21,10 +21,8 @@ import {
 } from "react";
 
 import { DaySquare } from "@/components/day-square";
-import { durations, morphTiming } from "@/components/motion";
+import { durations, easeOut, morphTiming } from "@/components/motion";
 import { formatMonth, formatMonthShort, monthWeeks } from "@/features/habit-page/months";
-
-const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
 
 /** A swipe this long, or a flick, flips the year. */
 const SWIPE_PX = 48;
@@ -240,7 +238,7 @@ export function useMonthZoom({
     const animation = reduceMotion
       ? months.animate([{ opacity: 0 }, { opacity: 1 }], {
           duration: durations.fade,
-          easing: EASE_OUT,
+          easing: easeOut,
         })
       : months.animate(
           [{ opacity: 0, transform: `translateX(${direction * 1.5}rem)` }, { opacity: 1 }],
@@ -406,7 +404,7 @@ function zoomOutMotion(
         {
           duration: duration * 0.6,
           delay: duration * (0.18 + distance * 0.045),
-          easing: EASE_OUT,
+          easing: easeOut,
           fill: "backwards",
         },
       ),
@@ -444,7 +442,7 @@ function zoomInMotion(
     animations.push(
       other.animate([{ opacity: 1 }, { opacity: 0, transform: "scale(0.94)" }], {
         duration: duration * 0.35,
-        easing: EASE_OUT,
+        easing: easeOut,
         fill: "forwards",
       }),
     );
@@ -496,7 +494,7 @@ function labelMotion(trigger: HTMLElement | null, reduceMotion: boolean): Motion
 
 /** Under reduced motion the two levels crossfade in place. */
 function crossfade(direction: "out" | "in", days: HTMLElement, months: HTMLElement): Motion {
-  const timing = { duration: durations.fade, easing: EASE_OUT, fill: "forwards" as const };
+  const timing = { duration: durations.fade, easing: easeOut, fill: "forwards" as const };
   const [leaving, coming] = direction === "out" ? [days, months] : [months, days];
   const animations = [
     leaving.animate([{ opacity: 1 }, { opacity: 0 }], timing),
