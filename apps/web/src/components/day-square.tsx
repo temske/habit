@@ -1,5 +1,4 @@
 import type { HabitColor } from "@habit/core";
-import { animate } from "motion";
 import { useReducedMotion } from "motion/react";
 import {
   memo,
@@ -10,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { durations, easeOut, PULSE_VELOCITY, springs } from "@/components/motion";
+import { durations, easeOut, playPulse } from "@/components/motion";
 import { habitColorVar } from "@/components/palette";
 import { cn } from "@/lib/utils";
 
@@ -91,10 +90,7 @@ export const DaySquare = memo(function DaySquare({
       });
       return;
     }
-    if (p > before) {
-      // A spring from rest at 1 back to 1, started with a velocity: it overshoots and settles.
-      animate(square, { scale: 1 }, { ...springs.pulse, velocity: PULSE_VELOCITY });
-    }
+    if (p > before) playPulse(square);
   }, [p, animated, reduceMotion]);
 
   return (

@@ -1,3 +1,11 @@
+/* The calendar sets `--rows` on its viewport at each frame of a slide between Months. Only the
+   viewport reads it, so it does not inherit: else each frame restyles every Day of the pages. */
+@property --rows {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 5;
+}
+
 /*
  * The page of a habit, in the world of the list (styles.css): a ground with no surfaces, space
  * instead of lines, and color only where it is data. The measures are in rem, so the desktop's

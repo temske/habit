@@ -450,6 +450,15 @@
 
 /* ── Sheets, dialogs, popovers (ResponsiveSheet) ────────────────────────────────────────────── */
 
+/* Base UI writes the swipe's distance on the sheet at every move of the finger. Only the sheet
+   reads it, so it does not inherit: else each move restyles everything inside the sheet, and a
+   swipe gets slower as the sheet holds more (the icon picker's grid). */
+@property --drawer-swipe-movement-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
 @layer components {
   /* Phone: a bottom sheet that floats above the home indicator, as in Family. */
   .sheet-backdrop {

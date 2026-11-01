@@ -4,7 +4,6 @@ import { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
 import { HashIcon } from "@phosphor-icons/react/dist/csr/Hash";
 import { ListBulletsIcon } from "@phosphor-icons/react/dist/csr/ListBullets";
 import { TextAaIcon } from "@phosphor-icons/react/dist/csr/TextAa";
-import { animate } from "motion";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   useCallback,
@@ -19,7 +18,7 @@ import {
 
 import { DaySquare } from "@/components/day-square";
 import { HabitIcon } from "@/components/habit-icon";
-import { PULSE_VELOCITY, springs } from "@/components/motion";
+import { playPulse, springs } from "@/components/motion";
 import { habitColorStyle } from "@/components/palette";
 import { cn } from "@/lib/utils";
 
@@ -52,11 +51,9 @@ export function IconTile({
   const tile = useRef<HTMLButtonElement>(null);
   const key = icon.type === "emoji" ? `e:${icon.emoji}` : `p:${icon.name}`;
 
-  // The pulse of a rising fill, as DaySquare does it: a spring from rest, started with a velocity.
+  // The pulse of a rising fill, as DaySquare does it.
   const pulse = useCallback(() => {
-    if (!reduceMotion && tile.current !== null) {
-      animate(tile.current, { scale: 1 }, { ...springs.pulse, velocity: PULSE_VELOCITY });
-    }
+    if (!reduceMotion && tile.current !== null) playPulse(tile.current);
   }, [reduceMotion]);
 
   return (
