@@ -390,6 +390,16 @@ function zoomOutMotion(
       }),
     );
   }
+  // The dates go first, before the Days have shrunk much: digits that shrink to a few pixels only
+  // flicker.
+  for (const date of dayDates(days)) {
+    animations.push(
+      date.animate([{ opacity: 1 }, { opacity: 0, offset: 0.12 }, { opacity: 0 }], {
+        duration,
+        fill: "forwards",
+      }),
+    );
+  }
   const cells = [...months.querySelectorAll<HTMLElement>(".hp-months-cell")];
   const at = cells.indexOf(cell);
   cells.forEach((other, index) => {
@@ -467,7 +477,26 @@ function zoomInMotion(
       weekdays.animate([{ opacity: 0 }, { opacity: 0, offset: 0.6 }, { opacity: 1 }], { duration }),
     );
   }
+  // The dates come last, when the Days are near their size, as they went first on the way out.
+  for (const date of dayDates(days)) {
+    animations.push(
+      date.animate(
+        [
+          { opacity: 0 },
+          { opacity: 0, offset: 0.45 },
+          { opacity: 1, offset: 0.75 },
+          { opacity: 1 },
+        ],
+        { duration, fill: "backwards" },
+      ),
+    );
+  }
   return together(animations, height);
+}
+
+/** The dates of the Month on show (the pager's middle slot), the only ones on the screen. */
+function dayDates(days: HTMLElement): HTMLElement[] {
+  return [...days.querySelectorAll<HTMLElement>('[data-slot="0"] .hp-day-date')];
 }
 
 /** The old label fades out quickly, and the new one fades in after it. */

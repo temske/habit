@@ -86,7 +86,7 @@ export function YearGrid({ habit, today, entries, month, onSelectMonth }: YearGr
   };
 
   return (
-    <section ref={scroller} className="hp-year" aria-label="The last 12 months">
+    <section ref={scroller} className="hp-year" aria-label="The last 12 months" data-own-swipe="">
       <div className="hp-year-inner" onKeyDown={onKeyDown}>
         <div className="hp-year-grid" aria-hidden>
           {grid.columns.map((column) =>

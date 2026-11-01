@@ -333,6 +333,37 @@
   }
 }
 
+/* ── On a phone, the swipe back (swipe-back.ts): while the finger moves the page, the list is under
+   it. Both are fixed to the screen, each scrolled where it was, and moved by the gesture; the
+   window does not scroll meanwhile. A fixed element inside each (the dock, the page's buttons)
+   stays on its own layer, which `will-change` makes their containing block. The page only scrolls
+   vertically by itself, so a sideways move stays with the gesture. ── */
+
+@media (width < 40em) {
+  .screens-page {
+    touch-action: pan-y;
+  }
+
+  .screens[data-swipe] > .screens-list,
+  .screens[data-swipe] > .screens-page {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--ground);
+    will-change: translate;
+  }
+
+  .screens[data-swipe] > .screens-list {
+    z-index: 0;
+    translate: -30% 0;
+    filter: brightness(var(--screens-dim));
+  }
+
+  .screens[data-swipe] > .screens-page {
+    z-index: 1;
+  }
+}
+
 /* How dark the list goes under the page: a little on white, more on black, where only the ink and
    the habit colors can dim. */
 :root {

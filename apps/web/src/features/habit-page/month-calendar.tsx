@@ -560,6 +560,7 @@ export function MonthCalendar({ habit, today, month, onMonthChange }: MonthCalen
           <div
             ref={pager.viewportRef}
             className="hp-cal-viewport"
+            data-own-swipe=""
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -604,6 +605,7 @@ export function MonthCalendar({ habit, today, month, onMonthChange }: MonthCalen
           <div
             ref={zoom.monthsRef}
             className="hp-months"
+            data-own-swipe=""
             role="group"
             aria-label={String(zoom.year)}
             {...zoom.monthsGestures}
