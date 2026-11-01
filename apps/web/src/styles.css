@@ -126,6 +126,10 @@
   /* `squircle-*` and the gauges: a superellipse needs a larger radius than a circle arc. */
   --squircle-k: 1;
 
+  /* The width of a Day's frame, and of a thin one. Snapped to whole device pixels below. */
+  --frame: 0.09375rem;
+  --frame-thin: 0.0625rem;
+
   /* shadcn/ui's names, mapped onto the world, for any shadcn component. */
   --background: var(--ground);
   --foreground: var(--ink);
@@ -205,6 +209,32 @@
 @supports (corner-shape: squircle) {
   :root {
     --squircle-k: 1.75;
+  }
+}
+
+/* A frame of 1.5px is 4.5 device pixels at 3x (and 3.75 on a 2x desktop with its 20px base): the
+   inset ring rounds to 5 at the top and the left and to 4 at the right and the bottom, so a Day
+   looked uneven. Snapped to whole device pixels, the four sides match. */
+:root {
+  --dpr: 1;
+}
+
+@media (min-resolution: 2dppx) {
+  :root {
+    --dpr: 2;
+  }
+}
+
+@media (min-resolution: 3dppx) {
+  :root {
+    --dpr: 3;
+  }
+}
+
+@supports (width: round(1px, 1px)) {
+  :root {
+    --frame: calc(round(nearest, 0.09375rem * var(--dpr), 1px) / var(--dpr));
+    --frame-thin: calc(round(nearest, 0.0625rem * var(--dpr), 1px) / var(--dpr));
   }
 }
 
@@ -323,13 +353,13 @@
     isolation: isolate;
     border-radius: calc(var(--ds-size) * 0.19 * var(--squircle-k));
     corner-shape: squircle;
-    box-shadow: inset 0 0 0 var(--ds-frame, 0.09375rem)
+    box-shadow: inset 0 0 0 var(--ds-frame, var(--frame))
       color-mix(in oklch, var(--c) var(--frame-mix), transparent);
     transition: box-shadow 160ms var(--ease-out);
   }
 
   .day-square[data-state="empty"] {
-    box-shadow: inset 0 0 0 var(--ds-frame, 0.09375rem) var(--line);
+    box-shadow: inset 0 0 0 var(--ds-frame, var(--frame)) var(--line);
   }
 
   .day-square-fill {
@@ -420,7 +450,7 @@
 
   .day-square[data-look="flat"][data-state="zero"] {
     background: var(--tile);
-    box-shadow: inset 0 0 0 var(--ds-frame, 0.0625rem)
+    box-shadow: inset 0 0 0 var(--ds-frame, var(--frame-thin))
       color-mix(in oklch, var(--c) var(--frame-mix), transparent);
   }
 
@@ -1194,7 +1224,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .day-cell:hover .day-square[data-state="empty"] {
-      box-shadow: inset 0 0 0 var(--ds-frame, 0.09375rem) var(--line-strong);
+      box-shadow: inset 0 0 0 var(--ds-frame, var(--frame)) var(--line-strong);
     }
   }
 

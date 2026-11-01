@@ -49,7 +49,9 @@ export function beforeScreenChange(): void {
 export function animateTraversals(router: AnyRouter): () => void {
   if (!("navigation" in window)) return () => {};
   const onNavigate = (event: NavigateEvent) => {
-    if (event.navigationType !== "traverse" || event.hasUAVisualTransition) return;
+    const skip = skipNext;
+    skipNext = false;
+    if (skip || event.navigationType !== "traverse" || event.hasUAVisualTransition) return;
     // A sheet that opens or closes stays on the same screen.
     if (new URL(event.destination.url).pathname === window.location.pathname) return;
     passTapsThrough();
@@ -57,6 +59,16 @@ export function animateTraversals(router: AnyRouter): () => void {
   };
   navigation.addEventListener("navigate", onNavigate);
   return () => navigation.removeEventListener("navigate", onNavigate);
+}
+
+let skipNext = false;
+
+/**
+ * The next change of the screen plays no transition: the swipe back has already moved the page
+ * away with the finger (swipe-back.ts).
+ */
+export function skipNextTransition(): void {
+  skipNext = true;
 }
 
 /** How long after a click the transition can still run (the screen loads, then moves). */
