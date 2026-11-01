@@ -1,0 +1,21 @@
+# The CI check `PR title` (pr-title.yml), on the commit message's subject: every commit follows
+# `<type>(<scope>): <summary>`, with a lowercase start and no trailing period. The Vite+ dispatcher
+# runs this with sh.
+subject=$(head -n 1 "$1")
+
+# Git's own subjects for merges, reverts and autosquash fixups.
+if printf '%s\n' "$subject" | grep -Eq '^(Merge |Revert "|fixup! |squash! |amend! )'; then
+  exit 0
+fi
+
+types='feat|fix|perf|refactor|docs|test|build|ci|chore|revert|style'
+pattern="^(${types})(\([a-z0-9-]+\))?!?: [a-z0-9\`\"].*[^.]$"
+if ! printf '%s\n' "$subject" | grep -Eq "$pattern"; then
+  echo "\"$subject\" is not '<type>(<scope>): <summary>' with a lowercase start and no trailing period." >&2
+  echo "Types: $(echo "$types" | sed 's/|/, /g')." >&2
+  exit 1
+fi
+if [ "${#subject}" -gt 100 ]; then
+  echo "The subject is ${#subject} characters; keep the summary under about 72." >&2
+  exit 1
+fi
