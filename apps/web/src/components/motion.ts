@@ -45,6 +45,7 @@ export const cssSprings = {
   fill: spring(springs.fill.visualDuration, springs.fill.bounce).toString(),
   sheet: spring(springs.sheet.visualDuration, springs.sheet.bounce).toString(),
   morph: spring(springs.morph.visualDuration, springs.morph.bounce).toString(),
+  lift: spring(springs.lift.visualDuration, springs.lift.bounce).toString(),
 };
 
 /**
@@ -60,14 +61,16 @@ function timingOf(css: string): { duration: number; easing: string } {
 
 /**
  * Puts the CSS springs on the document as custom properties (`--spring-fill`, `--spring-sheet`).
- * The sheet spring also comes in its two parts, `--spring-sheet-duration` and
- * `--spring-sheet-easing`, for an animation whose name is not the author's (a view transition's
- * group).
+ * The sheet and the lift springs also come in their two parts (`--spring-sheet-duration` and
+ * `--spring-sheet-easing`, and the same for `lift`), for an animation whose name is not the
+ * author's (a view transition's group).
  */
 export function installCssSprings(root: HTMLElement = document.documentElement): void {
   root.style.setProperty("--spring-fill", cssSprings.fill);
   root.style.setProperty("--spring-sheet", cssSprings.sheet);
-  const [duration = "", ...easing] = cssSprings.sheet.split(" ");
-  root.style.setProperty("--spring-sheet-duration", duration);
-  root.style.setProperty("--spring-sheet-easing", easing.join(" "));
+  for (const name of ["sheet", "lift"] as const) {
+    const [duration = "", ...easing] = cssSprings[name].split(" ");
+    root.style.setProperty(`--spring-${name}-duration`, duration);
+    root.style.setProperty(`--spring-${name}-easing`, easing.join(" "));
+  }
 }

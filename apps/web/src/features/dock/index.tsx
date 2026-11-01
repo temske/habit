@@ -27,16 +27,17 @@ const TABS: {
  * of `ink`. It is the last thing in its screen and sticks to the bottom of the screen (of the
  * list's column, on a desktop), so the content scrolls under it and fades out above it.
  *
- * A tab changes the screen in place, as the tabs of a native app do: no transition, and no entry
- * in the history, so the back gesture never walks through the tabs. On a keyboard, N opens "New
- * habit" and the comma opens the settings.
+ * A tab changes the screen in place, with no entry in the history, so the back gesture never walks
+ * through the tabs. The change is a view transition (dock.css): the raised pill slides to the new
+ * tab, and the screen moves a little the way the tabs go. On a keyboard, N opens "New habit" and
+ * the comma opens the settings.
  *
  * `canCreate` is false until the habits have come, so "New habit" never opens on a list that
  * is not there yet.
  */
 export function Dock({ current, canCreate = true }: { current: DockTab; canCreate?: boolean }) {
   const openSheet = useOpenSheet();
-  useDockKeys(canCreate);
+  useDockKeys(current, canCreate);
 
   return (
     <div className="dock">
@@ -46,12 +47,17 @@ export function Dock({ current, canCreate = true }: { current: DockTab; canCreat
             key={tab}
             to={to}
             replace
+            viewTransition={tabTransition(current, tab)}
             className="dock-tab"
+            data-tab={tab}
             aria-current={tab === current ? "page" : undefined}
             aria-keyshortcuts={tab === "settings" ? "," : undefined}
           >
-            <Icon weight={tab === current ? "fill" : "bold"} aria-hidden />
-            <span className="dock-tab-label">{label}</span>
+            {tab === current ? <span className="dock-tab-pill" aria-hidden /> : null}
+            <span className="dock-tab-content">
+              <Icon weight={tab === current ? "fill" : "bold"} aria-hidden />
+              <span className="dock-tab-label">{label}</span>
+            </span>
           </Link>
         ))}
       </nav>
@@ -71,10 +77,20 @@ export function Dock({ current, canCreate = true }: { current: DockTab; canCreat
 }
 
 /**
+ * The view transition of a change of tab, named by its direction: `tab-forward` to a tab at the
+ * right, `tab-back` to one at the left. None for the tab on show.
+ */
+function tabTransition(from: DockTab, to: DockTab) {
+  const order = (tab: DockTab) => TABS.findIndex((entry) => entry.tab === tab);
+  if (from === to) return undefined;
+  return { types: [order(to) > order(from) ? "tab-forward" : "tab-back"] };
+}
+
+/**
  * N opens "New habit", and the comma opens the settings. Not while a sheet is open or a field has
  * the focus, and not with Cmd, Ctrl or Alt (Cmd+N is the browser's).
  */
-function useDockKeys(canCreate: boolean) {
+function useDockKeys(current: DockTab, canCreate: boolean) {
   const openSheet = useOpenSheet();
   const navigate = useNavigate();
   const search = useSheetSearch();
@@ -91,10 +107,14 @@ function useDockKeys(canCreate: boolean) {
         openSheet({ new: true });
       } else if (event.key === ",") {
         event.preventDefault();
-        void navigate({ to: "/settings", replace: true });
+        void navigate({
+          to: "/settings",
+          replace: true,
+          viewTransition: tabTransition(current, "settings"),
+        });
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [canCreate, navigate, openSheet, sheetOpen]);
+  }, [canCreate, current, navigate, openSheet, sheetOpen]);
 }
