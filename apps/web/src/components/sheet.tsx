@@ -38,6 +38,12 @@ export interface ResponsiveSheetProps {
    * height or scrolls, so the main action never moves.
    */
   footer?: ReactNode;
+  /**
+   * A sheet over another sheet, rendered inside it (a Base UI nested drawer on a phone). It adds
+   * no scrim of its own: the sheet under it steps back and dims instead (`.sheet-popup` with
+   * `data-nested-drawer-open`), and a swipe closes only this one.
+   */
+  nested?: boolean;
   className?: string;
   children: ReactNode;
 }
@@ -72,11 +78,12 @@ function BottomSheet({
   onExitComplete,
   initialFocus,
   footer,
+  nested = false,
   className,
   children,
 }: ResponsiveSheetProps) {
   // The installed app's status bar is outside the page: tint it with the scrim.
-  useEffect(() => (open ? dimThemeColor() : undefined), [open]);
+  useEffect(() => (open && !nested ? dimThemeColor() : undefined), [open, nested]);
 
   return (
     <Drawer.Root
@@ -87,40 +94,48 @@ function BottomSheet({
       }}
     >
       <Drawer.Portal>
-        <Drawer.Backdrop className="sheet-backdrop" />
+        {nested ? null : <Drawer.Backdrop className="sheet-backdrop" />}
         {/* What Safari 26 samples for the color of its bars at the top and the bottom edge. */}
-        {open ? (
+        {open && !nested ? (
           <>
             <div className="sheet-edge" data-edge="top" aria-hidden />
             <div className="sheet-edge" data-edge="bottom" aria-hidden />
           </>
         ) : null}
-        <Drawer.Viewport className="sheet-viewport" ref={trackSheetViewport}>
+        <Drawer.Viewport
+          className="sheet-viewport"
+          data-nested={nested ? "" : undefined}
+          ref={trackSheetViewport}
+        >
           <Drawer.VirtualKeyboardProvider>
             <Drawer.Popup
               className={cn("sheet-popup", className)}
               {...(initialFocus === undefined ? {} : { initialFocus })}
             >
               <div className="sheet-handle" aria-hidden />
+              {/* The handle and the header stay at the top, and the footer at the bottom: only
+                  the body between them scrolls. */}
               <Drawer.Content className="sheet-content">
-                <MorphHeight>
-                  <SheetHeader
-                    title={<Drawer.Title className={titleClass(hideTitle)}>{title}</Drawer.Title>}
-                    description={
-                      description === undefined ? null : (
-                        <Drawer.Description className="sheet-description">
-                          {description}
-                        </Drawer.Description>
-                      )
-                    }
-                    close={
-                      <Drawer.Close className="sheet-close" aria-label="Close">
-                        <XIcon weight="bold" />
-                      </Drawer.Close>
-                    }
-                  />
-                  <div className="sheet-body">{children}</div>
-                </MorphHeight>
+                <SheetHeader
+                  title={<Drawer.Title className={titleClass(hideTitle)}>{title}</Drawer.Title>}
+                  description={
+                    description === undefined ? null : (
+                      <Drawer.Description className="sheet-description">
+                        {description}
+                      </Drawer.Description>
+                    )
+                  }
+                  close={
+                    <Drawer.Close className="sheet-close" aria-label="Close">
+                      <XIcon weight="bold" />
+                    </Drawer.Close>
+                  }
+                />
+                <div className="sheet-scroll">
+                  <MorphHeight>
+                    <div className="sheet-body">{children}</div>
+                  </MorphHeight>
+                </div>
                 <SheetFooter footer={footer} />
               </Drawer.Content>
             </Drawer.Popup>
@@ -140,6 +155,7 @@ function CenteredDialog({
   onExitComplete,
   initialFocus,
   footer,
+  nested = false,
   className,
   children,
 }: ResponsiveSheetProps) {
@@ -152,7 +168,7 @@ function CenteredDialog({
       }}
     >
       <Dialog.Portal>
-        <Dialog.Backdrop className="dialog-backdrop" />
+        {nested ? null : <Dialog.Backdrop className="dialog-backdrop" />}
         <Dialog.Viewport className="dialog-viewport">
           <Dialog.Popup
             className={cn("dialog-popup", className)}

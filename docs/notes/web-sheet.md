@@ -63,10 +63,24 @@ size in points, with the values that the
 | 440×956 | 16 Pro Max, 17 Pro Max | 62 |
 
 In the installed app, with the keyboard closed, on a screen of the table, the sheet sits 0.5rem
-from the bottom edge, and its bottom radius is the display's radius less 0.5rem, times
-`--squircle-k`. Its footer (or its body, without a footer) gets the home indicator's inset less
-0.5rem of extra bottom padding. Anywhere else (Safari, an unknown screen, a phone with Display
-Zoom, which reports a smaller screen) the sheet floats above the home indicator as before.
+from the bottom edge, and the radius of all four corners is the display's radius less 0.5rem,
+times `--squircle-k`. Its footer (or its body, without a footer) gets the home indicator's inset
+less 0.5rem of extra bottom padding. Anywhere else (Safari, an unknown screen, a phone with
+Display Zoom, which reports a smaller screen) the sheet floats above the home indicator, and all
+four corners keep the normal 1.25rem.
+
+The first version made only the bottom corners concentric, and the top ones kept 1.25rem. The
+owner found that wrong ("rounding only at the bottom"). iOS 26 gives a floating sheet the same
+radius on all four corners, so the sheet does too. The header's inset grows with the radius
+(30% of it, at least 0.75rem), so the close disc stays clear of the larger top corners: 1rem at
+the 54px corners of a 17 Pro, where the disc's edge is then about 17px from the curve.
+
+The owner's screenshot of the entry input showed the large bottom corners on a page with a bar
+above it ("habit.tem.sh") and a toolbar under it. There the sheet does not touch the screen's
+corners. iOS reports `navigator.standalone` for a Home Screen app even when it shows such a
+toolbar, so the standalone check alone was not enough. The sheet now hugs only when the page also
+reaches the screen's bottom edge: the page is as tall as the screen, less at most 80pt for a
+status bar above it. A toolbar and a top bar take far more.
 
 ## The keyboard
 
@@ -92,10 +106,32 @@ padding, and only scrolls the focused field into view. The footer sticks to the 
 The values are written in the viewport events, before Base UI measures in the next frame. Chrome
 on Android resizes the page for the keyboard, so there the sheet needs no help.
 
+## The fixed header
+
+The sheet is a column: the handle and the header at the top, the footer at the bottom, and
+between them `.sheet-scroll`, the only part that scrolls. Before, the whole popup scrolled, and the
+handle and the header went up with the content (the owner's screenshot of "New habit" with the
+inline picker open). Base UI's swipe finds the scroll area by itself: a swipe down dismisses from
+the header, or from the body when it is at the top.
+
+## A sheet over a sheet
+
+`ResponsiveSheet` takes `nested` for a sheet that opens inside another one: the icon picker over
+the habit form. On a phone it is a Base UI nested drawer. It renders no scrim, no edge bands, and
+does not dim `theme-color` again: the sheet under it does that. Base UI marks the sheet under it
+with `data-nested-drawer-open` and gives it `--drawer-height`, `--drawer-frontmost-height` and,
+during a swipe of the sheet in front, `--drawer-swipe-progress`. With them, `.sheet-popup` scales to
+0.94 from its top edge, dims, and rises until its top edge shows 0.625rem above the sheet in front,
+and comes back in step with the swipe. The nested viewport leaves 0.625rem more room at the top,
+so the sheet in front never covers that edge, even when both are as tall as they can be.
+
 ## Checks
 
 - `components/sheet-viewport.test.ts`: the keyboard band, the pan, the pinch zoom, the corner
-  table, the blended theme color.
+  table, the page that does not reach the bottom edge, the blended theme color.
+- In Chrome, the stacked picker frame by frame: the form scales from 1 to 0.94, rises and dims
+  with the sheet spring while the picker slides up; a touch swipe of 440px on the picker's header
+  closes only the picker, and the form comes back to its full size.
 - In Chrome (fake provider, 402×874 at 3x, safe areas replaced as in `docs/notes/pwa.md`): the
   screenshots of the PR. The keyboard is a fake `visualViewport` (416pt tall, and panned by 396pt
   for the Limit field) with a gray box drawn where the keyboard would be.
@@ -121,3 +157,11 @@ on Android resizes the page for the keyboard, so there the sheet needs no help.
    keyboard with its check mark: the sheet must go back down (in the installed app, to the screen's
    corners).
 7. Swipe a sheet down to dismiss it: the scrim, the status bar band and Safari's bars come back.
+8. Any sheet, in the installed app and in Safari: the four corners have the same radius. In the
+   installed app, it follows the screen's corners; with a browser bar under the page, it is the
+   normal small radius. The close button stays clear of the top right corner.
+9. "New habit", then the icon tile: the picker slides up over the form. The form shrinks a little,
+   dims, and shows its top edge above the picker. Swipe the picker down: only the picker closes,
+   and the form grows back with the finger. Do the same with an Option's emoji in "Edit".
+10. A long sheet (the edit sheet of a choice habit): scroll it. The handle and the header stay at
+    the top.

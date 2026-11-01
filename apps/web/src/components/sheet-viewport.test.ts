@@ -9,6 +9,7 @@ import { dimHex } from "@/components/theme-color";
 
 // An iPhone 17 Pro, installed to the Home Screen, keyboard closed.
 const phone: ViewportMetrics = {
+  layoutWidth: 402,
   layoutHeight: 874,
   visual: { height: 874, offsetTop: 0, scale: 1 },
   standalone: true,
@@ -20,8 +21,27 @@ describe("the sheet's place", () => {
     expect(sheetViewportState(phone)).toEqual({ keyboard: null, hug: 62 });
   });
 
+  test("with the status bar outside the page, the sheet still hugs", () => {
+    expect(sheetViewportState({ ...phone, layoutHeight: 812 }).hug).toBe(62);
+  });
+
   test("in Safari, the sheet floats above the bar", () => {
     expect(sheetViewportState({ ...phone, standalone: false }).hug).toBeNull();
+  });
+
+  test("a Home Screen app with a toolbar under the page floats the sheet above it", () => {
+    // iOS reports `navigator.standalone`, but the page ends above a toolbar.
+    expect(sheetViewportState({ ...phone, layoutHeight: 690 }).hug).toBeNull();
+  });
+
+  test("on its side, the installed app hugs the corners too", () => {
+    const state = sheetViewportState({
+      ...phone,
+      layoutWidth: 874,
+      layoutHeight: 402,
+      visual: { height: 402, offsetTop: 0, scale: 1 },
+    });
+    expect(state.hug).toBe(62);
   });
 
   test("on a screen of unknown corners, the sheet floats", () => {

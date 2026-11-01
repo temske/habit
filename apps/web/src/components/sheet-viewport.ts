@@ -39,6 +39,14 @@ const DISPLAY_CORNERS: Partial<Record<string, number>> = {
 /** How much shorter than the layout viewport the visual viewport is when a keyboard is up. */
 const KEYBOARD_THRESHOLD = 60;
 
+/**
+ * How much shorter than the screen a page that reaches the screen's bottom edge can be: the status
+ * bar above it, which the installed app's `default` style keeps outside the page (at most about
+ * 68pt). A browser's or a web view's bars take more: a bottom toolbar and the top bar together are
+ * well over 100pt.
+ */
+const STATUS_BAR_MAX = 80;
+
 export interface SheetViewportState {
   /** The visible part of the layout viewport, when a software keyboard covers the rest. */
   keyboard: { top: number; bottom: number } | null;
@@ -47,6 +55,7 @@ export interface SheetViewportState {
 }
 
 export interface ViewportMetrics {
+  layoutWidth: number;
   layoutHeight: number;
   visual: { height: number; offsetTop: number; scale: number } | null;
   standalone: boolean;
@@ -70,10 +79,20 @@ export function sheetViewportState(metrics: ViewportMetrics): SheetViewportState
         }
       : null;
   // Only the installed app has no browser bar under the sheet. With the keyboard up the sheet sits
-  // on the keyboard, away from the corners.
+  // on the keyboard, away from the corners. `standalone` is not enough: iOS reports it for a Home
+  // Screen app that shows a toolbar under the page, so the page must also reach the bottom edge.
   const radius = displayCornerRadius(metrics.screen.width, metrics.screen.height);
-  const hug = metrics.standalone && keyboard === null ? radius : null;
+  const hug = metrics.standalone && keyboard === null && reachesBottom(metrics) ? radius : null;
   return { keyboard, hug };
+}
+
+/** The page is as tall as the screen, less at most a status bar: nothing is under it. */
+function reachesBottom({ layoutWidth, layoutHeight, screen }: ViewportMetrics): boolean {
+  // iOS reports the screen's size in portrait; the page's sides tell the orientation.
+  const long = Math.max(screen.width, screen.height);
+  const short = Math.min(screen.width, screen.height);
+  const screenHeight = layoutWidth > layoutHeight ? short : long;
+  return screenHeight - layoutHeight <= STATUS_BAR_MAX;
 }
 
 /** `window.visualViewport`, which jsdom lacks although its type says it is never undefined. */
@@ -84,6 +103,7 @@ function visualViewport(): VisualViewport | null {
 function readMetrics(): ViewportMetrics {
   const visual = visualViewport();
   return {
+    layoutWidth: window.innerWidth,
     layoutHeight: window.innerHeight,
     visual:
       visual === null

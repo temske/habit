@@ -16,7 +16,6 @@ import { useAct } from "@/components/act";
 import { haptic } from "@/components/haptics";
 import { ResponsiveSheet } from "@/components/sheet";
 import { useIsWide } from "@/components/use-media-query";
-import { cn } from "@/lib/utils";
 
 import {
   ColorSwatches,
@@ -54,7 +53,6 @@ import {
   FloatingPicker,
   InlinePicker,
   PickerFor,
-  STACKED_UNDER_CLASS,
   triggerSelector,
   usePicker,
   zoomVariants,
@@ -195,7 +193,7 @@ export function EditHabitSheet({
       }}
       onExitComplete={onExitComplete}
       title={step === "icon" ? "Icon" : step === "emoji" ? "Emoji" : "Edit habit"}
-      className={cn(FORM_SHEET_CLASS, picker.place === "Stacked sheet" && STACKED_UNDER_CLASS)}
+      className={FORM_SHEET_CLASS}
     >
       <div ref={rootRef}>
         <Steps

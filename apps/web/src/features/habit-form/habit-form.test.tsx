@@ -39,6 +39,8 @@ function renderApp(path: string, initial: HabitState = demoState(TODAY)) {
 }
 
 const sheet = () => screen.findByRole("dialog");
+/** The picker's sheet, stacked over the form's ("Icon" or "Emoji"). */
+const pickerSheet = (name: "Icon" | "Emoji") => screen.findByRole("dialog", { name });
 const type = (element: HTMLElement, value: string) =>
   fireEvent.change(element, { target: { value } });
 const offeredLabels = (habit: Habit | undefined) =>
@@ -118,7 +120,8 @@ describe("create", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Add option" }));
     type(within(dialog).getByRole("textbox", { name: "Option 2 of 2" }), "Coffee");
     fireEvent.click(within(dialog).getByRole("button", { name: "Emoji for Coffee" }));
-    fireEvent.click(await within(dialog).findByRole("button", { name: "☕" }));
+    fireEvent.click(await within(await pickerSheet("Emoji")).findByRole("button", { name: "☕" }));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Emoji" })).toBeNull());
     // A row that was added and left empty is not an option.
     fireEvent.click(await within(dialog).findByRole("button", { name: "Add option" }));
     fireEvent.click(within(dialog).getByRole("button", { name: "Add habit" }));
@@ -169,32 +172,37 @@ describe("create", () => {
     expect(app.named("Walk")!.order > last.order).toBe(true);
   });
 
-  test("the icon picker unfolds in the form, and a pick folds it and keeps the name", async () => {
+  test("the icon picker opens over the form, and a pick closes only the picker", async () => {
     const app = renderApp("/?new=true");
     const dialog = await startNew("Stretch");
-    const tile = within(dialog).getByRole("button", { name: "Change icon" });
-    fireEvent.click(tile);
-    // The form stays while the picker is open.
-    type(await within(dialog).findByRole("searchbox"), "run");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Change icon" }));
+    const picker = await pickerSheet("Icon");
+    type(within(picker).getByRole("searchbox"), "run");
+    fireEvent.click(await within(picker).findByRole("button", { name: "🏃" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Icon" })).toBeNull());
+    // The form stayed under the picker, with what was typed.
     expect(within(dialog).getByRole("textbox", { name: "Name" })).toHaveProperty(
       "value",
       "Stretch",
     );
-
-    fireEvent.click(await within(dialog).findByRole("button", { name: "🏃" }));
-    await waitFor(() => expect(within(dialog).queryByRole("searchbox")).toBeNull());
     fireEvent.click(within(dialog).getByRole("button", { name: "Add habit" }));
     expect(app.named("Stretch")?.icon).toEqual({ type: "emoji", emoji: "🏃" });
   });
 
-  test("a second tap on the icon folds the picker away without a change", async () => {
+  test("closing the icon picker keeps the form under it open", async () => {
     renderApp("/?new=true");
     const dialog = await startNew("Stretch");
-    const tile = within(dialog).getByRole("button", { name: "Change icon" });
-    fireEvent.click(tile);
-    await within(dialog).findByRole("searchbox");
-    fireEvent.click(tile);
-    await waitFor(() => expect(within(dialog).queryByRole("searchbox")).toBeNull());
+    fireEvent.click(within(dialog).getByRole("button", { name: "Change icon" }));
+    const picker = await pickerSheet("Icon");
+    fireEvent.click(within(picker).getByRole("button", { name: "Close" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Icon" })).toBeNull());
+    expect(screen.getByRole("dialog")).toBe(dialog);
+    expect(within(dialog).getByRole("textbox", { name: "Name" })).toHaveProperty(
+      "value",
+      "Stretch",
+    );
   });
 });
 
@@ -326,12 +334,16 @@ describe("edit", () => {
 
     expect(push()?.emoji).toBeDefined();
     fireEvent.click(within(dialog).getByRole("button", { name: /^Emoji for Push/ }));
-    fireEvent.click(await within(dialog).findByRole("button", { name: "No emoji" }));
+    fireEvent.click(
+      await within(await pickerSheet("Emoji")).findByRole("button", { name: "No emoji" }),
+    );
     await waitFor(() => expect(push()?.emoji).toBeUndefined());
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Emoji" })).toBeNull());
 
     fireEvent.click(await within(dialog).findByRole("button", { name: "Emoji for Push" }));
-    type(await within(dialog).findByRole("searchbox"), "run");
-    fireEvent.click(await within(dialog).findByRole("button", { name: "🏃" }));
+    const picker = await pickerSheet("Emoji");
+    type(within(picker).getByRole("searchbox"), "run");
+    fireEvent.click(await within(picker).findByRole("button", { name: "🏃" }));
     await waitFor(() => expect(push()?.emoji).toBe("🏃"));
   });
 
