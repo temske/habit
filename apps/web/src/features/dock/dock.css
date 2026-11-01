@@ -169,6 +169,13 @@
    to the new tab with the lift spring (Motion, in index.tsx). Nothing covers the screen, so a tap
    on a tab always lands, however fast the taps come. ── */
 
+/* The content starts 1.5rem to the side: clipped, it never widens the page, which a phone would
+   zoom out to show, moving the dock and the tabs under the finger. `clip`, not `hidden`, so the
+   list's sticky header still sticks. */
+[data-tab-enter] {
+  overflow-x: clip;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   [data-tab-enter] > :not(.dock, .dock-room) {
     animation: tab-enter-from-right 220ms var(--ease-out) both;
