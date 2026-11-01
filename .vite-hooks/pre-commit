@@ -1,0 +1,4 @@
+# The CI check `Check, test and build` (ci.yml): `vp check`, each package's tests and `vp build`,
+# the `ready` task in vite.config.ts. Each step is cached, so a step whose inputs did not change
+# replays its last output. The Vite+ dispatcher runs this with sh.
+vp run ready

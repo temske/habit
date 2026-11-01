@@ -16,6 +16,9 @@ vp dev
 
 `vp dev` serves the web app on http://localhost:5173.
 
+`vp install` also turns on the Git hooks in `.vite-hooks/`: each commit runs `vp run ready` and
+checks the commit message format, as CI does.
+
 ## Commands
 
 | Command        | What it does                                                    |

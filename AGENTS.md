@@ -55,6 +55,11 @@ or after a built-in gets its own name, such as `dev:fresh`, and runs with `vp ru
 Before you push, `vp run ready` passes: `vp check`, each package's tests and `vp build`, as CI runs
 them. `vp check --fix` formats and applies lint fixes.
 
+**Git hooks run the CI checks locally.** `vp install` runs the root `prepare` script, `vp config`,
+which points Git at the hooks in `.vite-hooks/`. The `pre-commit` hook runs `vp run ready`, and the
+`commit-msg` hook checks the subject against the commit format below, as the `PR title` check does.
+`VP_GIT_HOOKS=0 git commit …` skips them once, and `vp hooks disable` turns them off in a clone.
+
 # Workspace
 
 A Vite+ workspace on pnpm.
